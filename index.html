@@ -10,17 +10,17 @@
       height: 100%;
       overflow: hidden;
       font-family: Arial, sans-serif;
-      background: #001f3f;
+      background: #001f3f; /* solid blue background */
       color: white;
     }
-    /* Binary rain background */
+    /* Binary rain canvas sits above blue background */
     canvas#binaryBg {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      z-index: -1;
+      z-index: 0;
     }
-    /* Centered O&B text */
+    /* Centered O&B text sits above canvas */
     #centerText {
       position: fixed;
       top: 50%;
@@ -29,10 +29,14 @@
       font-size: 60px;
       font-weight: bold;
       color: white;
-      z-index: 0;
+      z-index: 1;
       pointer-events: none;
     }
-    /* Top bar */
+    /* Top bar and embeds sit above everything */
+    #topbar, #gameContainer, #settingsMenu {
+      position: relative;
+      z-index: 2;
+    }
     #topbar {
       background: lightblue;
       color: white;
@@ -40,12 +44,6 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: relative;
-      z-index: 1;
-    }
-    #title {
-      font-weight: bold;
-      font-size: 20px;
     }
     #controls {
       display: flex;
@@ -66,9 +64,8 @@
       border: none;
       margin-top: 10px;
       position: relative;
-      z-index: 1; /* ensures iframe sits above background */
+      z-index: 2;
     }
-    /* Settings dropdown */
     #settingsMenu {
       position: absolute;
       top: 50px;
@@ -78,7 +75,6 @@
       display: none;
       flex-direction: column;
       gap: 10px;
-      z-index: 2;
     }
     #fps {
       font-size: 14px;
@@ -93,7 +89,7 @@
   <canvas id="binaryBg"></canvas>
   <div id="centerText">O&amp;B</div>
   <div id="topbar">
-    <div id="title">O&amp;B Unblocked Games Port</div>
+    <div>O&amp;B Unblocked Games Port</div>
     <div id="controls">
       <input id="urlInput" type="text" placeholder="Enter game URL">
       <button onclick="addGame()">Add</button>
@@ -113,6 +109,7 @@
   </div>
 
   <script>
+    // Game management
     const gameContainer = document.getElementById('gameContainer');
     let games = JSON.parse(localStorage.getItem('games') || '[]');
 
@@ -143,17 +140,11 @@
         document.getElementById('urlInput').value = '';
       }
     }
-
-    function clearGames() {
-      games = [];
-      renderGames();
-    }
-
+    function clearGames() { games = []; renderGames(); }
     function exportList() {
       const code = btoa(JSON.stringify(games));
       prompt("Export code:", code);
     }
-
     function importList() {
       const code = prompt("Paste import code:");
       if (code) {
@@ -161,22 +152,18 @@
         renderGames();
       }
     }
-
     function fullscreen(i) {
       const iframe = gameContainer.querySelectorAll('iframe')[i];
       if (iframe.requestFullscreen) iframe.requestFullscreen();
     }
-
     function openBlank(url) {
       const win = window.open("about:blank", "_blank");
       win.document.write(`<iframe src="${url}" style="width:100%;height:100%;border:none;"></iframe>`);
     }
-
     function toggleSettings() {
       const menu = document.getElementById('settingsMenu');
       menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
     }
-
     function toggleCursor() {
       if (document.getElementById('cursorToggle').checked) {
         document.body.classList.add('emoji-cursor');
@@ -196,7 +183,7 @@
     }
     requestAnimationFrame(fpsLoop);
 
-    // Binary background animation
+    // Binary rain animation
     const canvas = document.getElementById('binaryBg');
     const ctx = canvas.getContext('2d');
     let width, height, columns, drops;
@@ -210,7 +197,7 @@
     resizeCanvas();
 
     function draw() {
-      ctx.fillStyle = "rgba(0, 31, 63, 0.1)";
+      ctx.fillStyle = "rgba(0, 31, 63, 0.2)"; // translucent blue overlay
       ctx.fillRect(0, 0, width, height);
       ctx.fillStyle = "#0f0";
       ctx.font = "20px monospace";
