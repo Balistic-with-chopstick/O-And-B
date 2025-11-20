@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Unblocked Games Port</title>
+  <title>O&B Unblocked Games Port</title>
   <!-- Favicon -->
   <link rel="icon" type="image/jpeg" href="favicon.jpg">
   <style>
@@ -174,13 +174,21 @@
       }
     }
 
-    // New O-And-B toggle
+    // New O-And-B toggle with tab title
     let oAndBWindow = null;
     function toggleOAndB() {
       const checkbox = document.getElementById('oAndBToggle');
       if (checkbox.checked) {
         oAndBWindow = window.open("about:blank", "_blank");
-        oAndBWindow.document.write(`<iframe src="https://balistic-with-chopstick.github.io/O-And-B/" style="width:100%;height:100%;border:none;"></iframe>`);
+        oAndBWindow.document.write(`
+          <head>
+            <title>O&B Unblocked Games Port</title>
+          </head>
+          <body style="margin:0">
+            <iframe src="https://balistic-with-chopstick.github.io/O-And-B/" 
+                    style="width:100%;height:100%;border:none;"></iframe>
+          </body>
+        `);
       } else {
         if (oAndBWindow && !oAndBWindow.closed) {
           oAndBWindow.close();
