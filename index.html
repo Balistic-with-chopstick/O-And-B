@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Unblocked Games Port</title>
-  <!-- Favicon -->
+  <title>O&B Unblocked Games Port</title>
   <link rel="icon" type="image/jpeg" href="favicon.jpg">
   <style>
     body, html {
@@ -32,10 +31,6 @@
       z-index: 1;
       pointer-events: none;
     }
-    #topbar, #gameContainer, #settingsMenu {
-      position: relative;
-      z-index: 2;
-    }
     #topbar {
       background: lightblue;
       color: white;
@@ -43,6 +38,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: relative;
+      z-index: 2;
     }
     #controls {
       display: flex;
@@ -57,13 +54,42 @@
       padding: 5px 10px;
       cursor: pointer;
     }
-    iframe {
-      width: 100%;
-      height: 80vh;
-      border: none;
-      margin-top: 10px;
+    /* Embed container scrollable */
+    #gameContainer {
       position: relative;
       z-index: 2;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      overflow-y: auto;
+      max-height: calc(100vh - 80px); /* leave space for top bar */
+      padding: 10px;
+      gap: 10px;
+    }
+    /* Each embed box */
+    .embedBox {
+      background: #222;
+      border: 2px solid #555;
+      display: flex;
+      flex-direction: column;
+      width: 300px;
+      height: 200px;
+    }
+    .embedToolbar {
+      background: #444;
+      padding: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .embedToolbar button {
+      padding: 3px 6px;
+      font-size: 12px;
+    }
+    .embedFrame {
+      flex: 1;
+      border: none;
+      width: 100%;
     }
     #settingsMenu {
       position: absolute;
@@ -74,6 +100,7 @@
       display: none;
       flex-direction: column;
       gap: 10px;
+      z-index: 3;
     }
     #fps {
       font-size: 14px;
@@ -111,42 +138,57 @@
   </div>
 
   <script>
-    // Game management
     const gameContainer = document.getElementById('gameContainer');
     let games = JSON.parse(localStorage.getItem('games') || '[]');
 
     function renderGames() {
       gameContainer.innerHTML = '';
       games.forEach((url, i) => {
-        const wrapper = document.createElement('div');
-        const iframe = document.createElement('iframe');
-        iframe.src = url;
-        wrapper.appendChild(iframe);
+        const box = document.createElement('div');
+        box.className = 'embedBox';
 
-        const btns = document.createElement('div');
-        btns.innerHTML = `
-          <button onclick="fullscreen(${i})">Fullscreen</button>
-          <button onclick="openBlank('${url}')">Open in about:blank</button>
+        const toolbar = document.createElement('div');
+        toolbar.className = 'embedToolbar';
+        toolbar.innerHTML = `
+          <span>Game ${i+1}</span>
+          <div>
+            <button onclick="fullscreen(${i})">Fullscreen</button>
+            <button onclick="openBlank('${url}')">About:Blank</button>
+          </div>
         `;
-        wrapper.appendChild(btns);
-        gameContainer.appendChild(wrapper);
+        box.appendChild(toolbar);
+
+        const iframe = document.createElement('iframe');
+        iframe.className = 'embedFrame';
+        iframe.src = url;
+        box.appendChild(iframe);
+
+        gameContainer.appendChild(box);
       });
       localStorage.setItem('games', JSON.stringify(games));
     }
 
     function addGame() {
       const url = document.getElementById('urlInput').value;
-      if (url) {
+      if (url && games.length < 200) {
         games.push(url);
         renderGames();
         document.getElementById('urlInput').value = '';
+      } else if (games.length >= 200) {
+        alert("Maximum of 200 embeds reached.");
       }
     }
-    function clearGames() { games = []; renderGames(); }
+
+    function clearGames() {
+      games = [];
+      renderGames();
+    }
+
     function exportList() {
       const code = btoa(JSON.stringify(games));
       prompt("Export code:", code);
     }
+
     function importList() {
       const code = prompt("Paste import code:");
       if (code) {
@@ -154,18 +196,30 @@
         renderGames();
       }
     }
+
     function fullscreen(i) {
-      const iframe = gameContainer.querySelectorAll('iframe')[i];
+      const iframe = gameContainer.querySelectorAll('.embedFrame')[i];
       if (iframe.requestFullscreen) iframe.requestFullscreen();
     }
+
     function openBlank(url) {
       const win = window.open("about:blank", "_blank");
-      win.document.write(`<iframe src="${url}" style="width:100%;height:100%;border:none;"></iframe>`);
+      win.document.write(`
+        <head>
+          <title>O&B Unblocked Games Port</title>
+          <link rel="icon" type="image/jpeg" href="favicon.jpg">
+        </head>
+        <body style="margin:0">
+          <iframe src="${url}" style="width:100%;height:100%;border:none;"></iframe>
+        </body>
+      `);
     }
+
     function toggleSettings() {
       const menu = document.getElementById('settingsMenu');
       menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
     }
+
     function toggleCursor() {
       if (document.getElementById('cursorToggle').checked) {
         document.body.classList.add('emoji-cursor');
@@ -174,7 +228,7 @@
       }
     }
 
-    // New O-And-B toggle with tab title + favicon
+    // O-And-B toggle
     let oAndBWindow = null;
     function toggleOAndB() {
       const checkbox = document.getElementById('oAndBToggle');
@@ -182,7 +236,7 @@
         oAndBWindow = window.open("about:blank", "_blank");
         oAndBWindow.document.write(`
           <head>
-            <title>Unblocked Games Port</title>
+            <title>O&B Unblocked Games Port</title>
             <link rel="icon" type="image/jpeg" href="favicon.jpg">
           </head>
           <body style="margin:0">
@@ -223,24 +277,4 @@
     resizeCanvas();
 
     function draw() {
-      ctx.fillStyle = "rgba(0, 31, 63, 0.2)";
-      ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = "#0f0";
-      ctx.font = "20px monospace";
-      for (let i = 0; i < drops.length; i++) {
-        const text = Math.random() > 0.5 ? "0" : "1";
-        ctx.fillText(text, i * 20, drops[i] * 20);
-        if (drops[i] * 20 > height && Math.random() > 0.975) {
-          drops[i] = 0;
-        }
-        drops[i]++;
-      }
-      requestAnimationFrame(draw);
-    }
-    draw();
-
-    // Initial render
-    renderGames();
-  </script>
-</body>
-</html>
+      ctx
