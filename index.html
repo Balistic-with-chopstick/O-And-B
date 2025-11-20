@@ -66,8 +66,9 @@
     #fps {
       font-size: 14px;
     }
-    .custom-cursor {
-      cursor: crosshair;
+    /* Custom emoji cursor */
+    .emoji-cursor {
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='24' font-size='24'>🕹️</text></svg>") 16 16, auto;
     }
   </style>
 </head>
@@ -88,7 +89,7 @@
   <div id="settingsMenu">
     <div id="fps">FPS: 0</div>
     <label>
-      Custom Cursor
+      Funny Emoji Cursor
       <input type="checkbox" id="cursorToggle" onchange="toggleCursor()">
     </label>
   </div>
@@ -160,9 +161,9 @@
 
     function toggleCursor() {
       if (document.getElementById('cursorToggle').checked) {
-        document.body.classList.add('custom-cursor');
+        document.body.classList.add('emoji-cursor');
       } else {
-        document.body.classList.remove('custom-cursor');
+        document.body.classList.remove('emoji-cursor');
       }
     }
 
