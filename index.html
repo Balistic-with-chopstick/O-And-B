@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>O&B Unblocked Games Port</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: #001f3f;
+      color: white;
+    }
+    /* Animated binary background */
+    canvas#binaryBg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+    }
+    /* Top bar */
+    #topbar {
+      background: lightblue;
+      color: white;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #title {
+      font-weight: bold;
+      font-size: 20px;
+    }
+    #controls {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    input[type="text"] {
+      padding: 5px;
+      width: 250px;
+    }
+    button {
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    iframe {
+      width: 100%;
+      height: 80vh;
+      border: none;
+      margin-top: 10px;
+    }
+    /* Settings dropdown */
+    #settingsMenu {
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      background: #333;
+      padding: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #fps {
+      font-size: 14px;
+    }
+    .custom-cursor {
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="binaryBg"></canvas>
+  <div id="topbar">
+    <div id="title">O&amp;B Unblocked Games Port</div>
+    <div id="controls">
+      <input id="urlInput" type="text" placeholder="Enter game URL">
+      <button onclick="addGame()">Add</button>
+      <button onclick="clearGames()">Clear</button>
+      <button onclick="exportList()">Export</button>
+      <button onclick="importList()">Import</button>
+      <button onclick="toggleSettings()">Settings</button>
+    </div>
+  </div>
+  <div id="gameContainer"></div>
+  <div id="settingsMenu">
+    <div id="fps">FPS: 0</div>
+    <label>
+      Custom Cursor
+      <input type="checkbox" id="cursorToggle" onchange="toggleCursor()">
+    </label>
+  </div>
+
+  <script>
+    const gameContainer = document.getElementById('gameContainer');
+    let games = JSON.parse(localStorage.getItem('games') || '[]');
+
+    function renderGames() {
+      gameContainer.innerHTML = '';
+      games.forEach((url, i) => {
+        const wrapper = document.createElement('div');
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        wrapper.appendChild(iframe);
+
+        const btns = document.createElement('div');
+        btns.innerHTML = `
+          <button onclick="fullscreen(${i})">Fullscreen</button>
+          <button onclick="openBlank('${url}')">Open in about:blank</button>
+        `;
+        wrapper.appendChild(btns);
+        gameContainer.appendChild(wrapper);
+      });
+      localStorage.setItem('games', JSON.stringify(games));
+    }
+
+    function addGame() {
+      const url = document.getElementById('urlInput').value;
+      if (url) {
+        games.push(url);
+        renderGames();
+        document.getElementById('urlInput').value = '';
+      }
+    }
+
+    function clearGames() {
+      games = [];
+      renderGames();
+    }
+
+    function exportList() {
+      const code = btoa(JSON.stringify(games));
+      prompt("Export code:", code);
+    }
+
+    function importList() {
+      const code = prompt("Paste import code:");
+      if (code) {
+        games = JSON.parse(atob(code));
+        renderGames();
+      }
+    }
+
+    function fullscreen(i) {
+      const iframe = gameContainer.querySelectorAll('iframe')[i];
+      if (iframe.requestFullscreen) iframe.requestFullscreen();
+    }
+
+    function openBlank(url) {
+      const win = window.open("about:blank", "_blank");
+      win.document.write(`<iframe src="${url}" style="width:100%;height:100%;border:none;"></iframe>`);
+    }
+
+    function toggleSettings() {
+      const menu = document.getElementById('settingsMenu');
+      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function toggleCursor() {
+      if (document.getElementById('cursorToggle').checked) {
+        document.body.classList.add('custom-cursor');
+      } else {
+        document.body.classList.remove('custom-cursor');
+      }
+    }
+
+    // FPS counter
+    let lastFrame = performance.now();
+    let fpsDisplay = document.getElementById('fps');
+    function fpsLoop(now) {
+      const fps = Math.round(1000 / (now - lastFrame));
+      fpsDisplay.textContent = "FPS: " + fps;
+      lastFrame = now;
+      requestAnimationFrame(fpsLoop);
+    }
+    requestAnimationFrame(fpsLoop);
+
+    // Binary background animation
+    const canvas = document.getElementById('binaryBg');
+    const ctx = canvas.getContext('2d');
+    let width, height, columns, drops;
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      columns = Math.floor(width / 20);
+      drops = Array(columns).fill(0);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function draw() {
+      ctx.fillStyle = "rgba(0, 31, 63, 0.1)";
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = "#0f0";
+      ctx.font = "20px monospace";
+      for (let i = 0; i < drops.length; i++) {
+        const text = Math.random() > 0.5 ? "0" : "1";
+        ctx.fillText(text, i * 20, drops[i] * 20);
+        if (drops[i] * 20 > height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // Initial render
+    renderGames();
+  </script>
+</body>
+</html>
