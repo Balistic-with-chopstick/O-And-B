@@ -12,17 +12,15 @@
       height: 100%;
       overflow: hidden;
       font-family: Arial, sans-serif;
-      background: #001f3f; /* solid blue background */
+      background: #001f3f;
       color: white;
     }
-    /* Binary rain canvas sits above blue background */
     canvas#binaryBg {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
       z-index: 0;
     }
-    /* Centered O&B text sits above canvas */
     #centerText {
       position: fixed;
       top: 50%;
@@ -34,7 +32,6 @@
       z-index: 1;
       pointer-events: none;
     }
-    /* Top bar and embeds sit above everything */
     #topbar, #gameContainer, #settingsMenu {
       position: relative;
       z-index: 2;
@@ -81,7 +78,6 @@
     #fps {
       font-size: 14px;
     }
-    /* Custom emoji cursor 🤪 */
     .emoji-cursor {
       cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='24' font-size='24'>🤪</text></svg>") 16 16, auto;
     }
@@ -107,6 +103,10 @@
     <label>
       🤪 Emoji Cursor
       <input type="checkbox" id="cursorToggle" onchange="toggleCursor()">
+    </label>
+    <label>
+      O-And-B Window
+      <input type="checkbox" id="oAndBToggle" onchange="toggleOAndB()">
     </label>
   </div>
 
@@ -174,6 +174,21 @@
       }
     }
 
+    // New O-And-B toggle
+    let oAndBWindow = null;
+    function toggleOAndB() {
+      const checkbox = document.getElementById('oAndBToggle');
+      if (checkbox.checked) {
+        oAndBWindow = window.open("about:blank", "_blank");
+        oAndBWindow.document.write(`<iframe src="https://balistic-with-chopstick.github.io/O-And-B/" style="width:100%;height:100%;border:none;"></iframe>`);
+      } else {
+        if (oAndBWindow && !oAndBWindow.closed) {
+          oAndBWindow.close();
+        }
+        oAndBWindow = null;
+      }
+    }
+
     // FPS counter
     let lastFrame = performance.now();
     let fpsDisplay = document.getElementById('fps');
@@ -199,7 +214,7 @@
     resizeCanvas();
 
     function draw() {
-      ctx.fillStyle = "rgba(0, 31, 63, 0.2)"; // translucent blue overlay
+      ctx.fillStyle = "rgba(0, 31, 63, 0.2)";
       ctx.fillRect(0, 0, width, height);
       ctx.fillStyle = "#0f0";
       ctx.font = "20px monospace";
