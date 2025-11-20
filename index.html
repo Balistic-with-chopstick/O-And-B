@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>O&B Unblocked Games Port</title>
-  <!-- Favicon -->
   <link rel="icon" type="image/jpeg" href="favicon.jpg">
   <style>
     body, html {
@@ -33,6 +32,7 @@
       color: white;
       z-index: 1;
       pointer-events: none;
+      text-shadow: 0 0 8px rgba(255,255,255,0.6);
     }
     /* Top bar */
     #topbar {
@@ -44,20 +44,29 @@
       justify-content: space-between;
       position: relative;
       z-index: 2;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     #controls {
       display: flex;
-      gap: 5px;
+      gap: 6px;
       align-items: center;
     }
-    input[type="text"] {
-      padding: 5px;
-      width: 250px;
+    #urlInput {
+      padding: 6px 8px;
+      width: 320px;
+      border-radius: 4px;
+      border: 1px solid #89c;
+      outline: none;
     }
     button {
-      padding: 5px 10px;
+      padding: 6px 10px;
       cursor: pointer;
+      border-radius: 4px;
+      border: 1px solid #89c;
+      background: #2a72a8;
+      color: #fff;
     }
+    button:hover { background: #226596; }
     /* Embed container */
     #gameContainer {
       position: relative;
@@ -66,36 +75,57 @@
       flex-wrap: wrap;
       align-items: flex-start;
       overflow-y: auto;
-      max-height: calc(100vh - 80px); /* space under top bar */
+      max-height: calc(100vh - 80px);
       padding: 10px;
       gap: 10px;
+      scroll-behavior: smooth;
     }
     /* Each embed box */
     .embedBox {
-      background: #222;
-      border: 2px solid #555;
+      background: #1b1b1b;
+      border: 2px solid #4a4a4a;
       display: flex;
       flex-direction: column;
-      width: 300px;
-      height: 200px;
+      width: 320px;
+      height: 220px;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
     }
     .embedToolbar {
-      background: #444;
-      padding: 5px;
+      background: #2a2a2a;
+      padding: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       color: #ddd;
       font-size: 12px;
+      border-bottom: 1px solid #3a3a3a;
+    }
+    .embedToolbar .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .embedToolbar .right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .embedToolbar button {
-      padding: 3px 6px;
+      padding: 4px 8px;
       font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #666;
+      background: #3a3a3a;
+      color: #eee;
     }
+    .embedToolbar button:hover { background: #4a4a4a; }
     .embedFrame {
       flex: 1;
       border: none;
       width: 100%;
+      background: #0b0b0b;
     }
     /* Settings menu */
     #settingsMenu {
@@ -108,47 +138,81 @@
       flex-direction: column;
       gap: 10px;
       z-index: 3;
+      border-radius: 6px;
+      border: 1px solid #555;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    #settingsMenu label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 14px;
     }
     #fps {
       font-size: 14px;
+      color: #a8e6a1;
     }
     /* Custom emoji cursor 🤪 */
     .emoji-cursor {
       cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='24' font-size='24'>🤪</text></svg>") 16 16, auto;
     }
+    /* Scroll down floating button */
+    #scrollDownBtn {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 4;
+      padding: 10px 12px;
+      border-radius: 20px;
+      border: 1px solid #89c;
+      background: #2a72a8;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: none;
+    }
+    #scrollDownBtn:hover { background: #226596; }
   </style>
 </head>
 <body>
   <canvas id="binaryBg"></canvas>
   <div id="centerText">O&amp;B</div>
+
   <div id="topbar">
     <div>O&amp;B Unblocked Games Port</div>
     <div id="controls">
       <input id="urlInput" type="text" placeholder="Enter game URL">
-      <button onclick="addGame()">Add</button>
-      <button onclick="clearGames()">Clear</button>
-      <button onclick="exportList()">Export</button>
-      <button onclick="importList()">Import</button>
-      <button onclick="toggleSettings()">Settings</button>
+      <button id="addBtn" onclick="addGame()">Add</button>
+      <button id="clearBtn" onclick="clearGames()">Clear</button>
+      <button id="exportBtn" onclick="exportList()">Export</button>
+      <button id="importBtn" onclick="importList()">Import</button>
+      <button id="settingsBtn" onclick="toggleSettings()">Settings</button>
     </div>
   </div>
+
   <div id="gameContainer"></div>
+
   <div id="settingsMenu">
     <div id="fps">FPS: 0</div>
     <label>
-      🤪 Emoji Cursor
+      <span>🤪 Emoji Cursor</span>
       <input type="checkbox" id="cursorToggle" onchange="toggleCursor()">
     </label>
     <label>
-      O-And-B Window
+      <span>O-And-B Window</span>
       <input type="checkbox" id="oAndBToggle" onchange="toggleOAndB()">
     </label>
   </div>
 
+  <button id="scrollDownBtn" onclick="scrollDown()">Scroll down</button>
+
   <script>
+    // Persistent list of embed URLs
     const gameContainer = document.getElementById('gameContainer');
+    const scrollDownBtn = document.getElementById('scrollDownBtn');
     let games = JSON.parse(localStorage.getItem('games') || '[]');
 
+    // Render all embeds as boxes with their own toolbars
     function renderGames() {
       gameContainer.innerHTML = '';
       games.forEach((url, i) => {
@@ -157,114 +221,210 @@
 
         const toolbar = document.createElement('div');
         toolbar.className = 'embedToolbar';
-        toolbar.innerHTML = `
-          <span>Site ${i+1}</span>
-          <div>
-            <button onclick="fullscreen(${i})">Fullscreen</button>
-            <button onclick="openBlank('${url}')">About:Blank</button>
-          </div>
-        `;
-        box.appendChild(toolbar);
+        const left = document.createElement('div');
+        left.className = 'left';
+        left.innerHTML = `<strong>Site ${i + 1}</strong>`;
+        const right = document.createElement('div');
+        right.className = 'right';
+
+        const fullBtn = document.createElement('button');
+        fullBtn.textContent = 'Fullscreen';
+        fullBtn.onclick = () => fullscreen(i);
+
+        const blankBtn = document.createElement('button');
+        blankBtn.textContent = 'About:Blank';
+        blankBtn.onclick = () => openBlank(url);
+
+        right.appendChild(fullBtn);
+        right.appendChild(blankBtn);
+        toolbar.appendChild(left);
+        toolbar.appendChild(right);
 
         const iframe = document.createElement('iframe');
         iframe.className = 'embedFrame';
         iframe.src = url;
-        box.appendChild(iframe);
 
+        box.appendChild(toolbar);
+        box.appendChild(iframe);
         gameContainer.appendChild(box);
       });
+
       localStorage.setItem('games', JSON.stringify(games));
+      updateScrollButtonVisibility();
     }
 
+    // Add a new URL as an embed (limit 200)
     function addGame() {
-      const url = document.getElementById('urlInput').value;
-      if (url && games.length < 200) {
-        games.push(url);
-        renderGames();
-        document.getElementById('urlInput').value = '';
-      } else if (games.length >= 200) {
-        alert("Maximum of 200 embeds reached.");
+      const input = document.getElementById('urlInput');
+      const url = input.value.trim();
+      if (!url) return;
+      if (games.length >= 200) {
+        alert('Maximum of 200 embeds reached.');
+        return;
       }
+      games.push(url);
+      input.value = '';
+      renderGames();
     }
 
+    // Clear all embeds
     function clearGames() {
       games = [];
       renderGames();
     }
 
+    // Export / import list
     function exportList() {
       const code = btoa(JSON.stringify(games));
-      prompt("Export code:", code);
+      prompt('Export code:', code);
     }
-
     function importList() {
-      const code = prompt("Paste import code:");
-      if (code) {
-        games = JSON.parse(atob(code));
-        renderGames();
+      const code = prompt('Paste import code:');
+      if (!code) return;
+      try {
+        const arr = JSON.parse(atob(code));
+        if (Array.isArray(arr)) {
+          games = arr.slice(0, 200); // enforce cap
+          renderGames();
+        } else {
+          alert('Invalid import format.');
+        }
+      } catch (e) {
+        alert('Import failed. Make sure the code is correct.');
       }
     }
 
-    function fullscreen(i) {
-      const iframe = gameContainer.querySelectorAll('.embedFrame')[i];
-      if (iframe.requestFullscreen) iframe.requestFullscreen();
+    // Fullscreen a specific iframe
+    function fullscreen(index) {
+      const frame = gameContainer.querySelectorAll('.embedFrame')[index];
+      if (frame && frame.requestFullscreen) {
+        frame.requestFullscreen();
+      }
     }
 
+    // Open a specific URL in about:blank with branded title and favicon
     function openBlank(url) {
-      const win = window.open("about:blank", "_blank");
+      const win = window.open('about:blank', '_blank');
       win.document.write(`
         <head>
+          <meta charset="UTF-8">
           <title>O&B Unblocked Games Port</title>
           <link rel="icon" type="image/jpeg" href="favicon.jpg">
+          <style>
+            html,body { margin:0; height:100%; background:#000; }
+            iframe { width:100%; height:100%; border:none; }
+          </style>
         </head>
-        <body style="margin:0">
-          <iframe src="${url}" style="width:100%;height:100%;border:none;"></iframe>
+        <body>
+          <iframe src="${url}"></iframe>
         </body>
       `);
+      win.document.close();
     }
 
+    // Settings menu visibility
     function toggleSettings() {
       const menu = document.getElementById('settingsMenu');
       menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
     }
 
+    // Emoji cursor toggle
     function toggleCursor() {
-      if (document.getElementById('cursorToggle').checked) {
-        document.body.classList.add('emoji-cursor');
-      } else {
-        document.body.classList.remove('emoji-cursor');
-      }
+      const checked = document.getElementById('cursorToggle').checked;
+      document.body.classList.toggle('emoji-cursor', checked);
     }
 
-    // O-And-B toggle
+    // O-And-B toggle: opens/closes branded about:blank window pointing to your page
     let oAndBWindow = null;
     function toggleOAndB() {
       const checkbox = document.getElementById('oAndBToggle');
       if (checkbox.checked) {
-        oAndBWindow = window.open("about:blank", "_blank");
+        oAndBWindow = window.open('about:blank', '_blank');
         oAndBWindow.document.write(`
           <head>
+            <meta charset="UTF-8">
             <title>O&B Unblocked Games Port</title>
             <link rel="icon" type="image/jpeg" href="favicon.jpg">
+            <style>
+              html,body { margin:0; height:100%; background:#000; }
+              iframe { width:100%; height:100%; border:none; }
+            </style>
           </head>
-          <body style="margin:0">
-            <iframe src="https://balistic-with-chopstick.github.io/O-And-B/" 
-                    style="width:100%;height:100%;border:none;"></iframe>
+          <body>
+            <iframe src="https://balistic-with-chopstick.github.io/O-And-B/"></iframe>
           </body>
         `);
+        oAndBWindow.document.close();
       } else {
-        if (oAndBWindow && !oAndBWindow.closed) {
-          oAndBWindow.close();
-        }
+        if (oAndBWindow && !oAndBWindow.closed) oAndBWindow.close();
         oAndBWindow = null;
       }
     }
 
+    // Scroll down helper
+    function updateScrollButtonVisibility() {
+      const maxH = parseFloat(getComputedStyle(gameContainer).maxHeight);
+      if (gameContainer.scrollHeight > maxH + 20) {
+        scrollDownBtn.style.display = 'block';
+      } else {
+        scrollDownBtn.style.display = 'none';
+      }
+    }
+    function scrollDown() {
+      gameContainer.scrollTop = gameContainer.scrollHeight;
+    }
+
     // FPS counter
     let lastFrame = performance.now();
-    let fpsDisplay = document.getElementById('fps');
+    const fpsDisplay = document.getElementById('fps');
     function fpsLoop(now) {
-      const fps = Math.round(1000 / (now - lastFrame));
-      fpsDisplay.textContent = "FPS: " + fps;
+      const delta = now - lastFrame;
+      const fps = Math.max(1, Math.round(1000 / (delta || 1)));
+      fpsDisplay.textContent = 'FPS: ' + fps;
       lastFrame = now;
-      requestAnimationFrame(f
+      requestAnimationFrame(fpsLoop);
+    }
+    requestAnimationFrame(fpsLoop);
+
+    // Binary rain animation (green 0s and 1s over blue, with soft fade)
+    const canvas = document.getElementById('binaryBg');
+    const ctx = canvas.getContext('2d');
+    let width = 0, height = 0, columns = 0, drops = [];
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      columns = Math.floor(width / 20);
+      drops = Array(columns).fill(0);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function draw() {
+      // translucent overlay to create trails over the blue background
+      ctx.fillStyle = 'rgba(0, 31, 63, 0.18)';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = '#0f0';
+      ctx.font = '20px monospace';
+      for (let i = 0; i < drops.length; i++) {
+        const text = Math.random() > 0.5 ? '0' : '1';
+        const x = i * 20;
+        const y = drops[i] * 20;
+        ctx.fillText(text, x, y);
+        if (y > height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // Initial render + restore toggles if present
+    renderGames();
+    // Optional: restore cursor toggle state from last session (off by default)
+    document.getElementById('cursorToggle').checked = false;
+    document.getElementById('oAndBToggle').checked = false;
+  </script>
+</body>
+</html>
