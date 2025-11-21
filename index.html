@@ -11,8 +11,9 @@
       height: 100%;
       overflow: hidden;
       font-family: Arial, sans-serif;
-      background: #001f3f;
+      background: #001f3f; /* default dark blue */
       color: white;
+      transition: background 0.5s ease;
     }
     canvas#binaryBg {
       position: fixed;
@@ -103,6 +104,10 @@
       flex-direction: column;
       width: 300px;
       height: 200px;
+      transition: width 0.3s ease;
+    }
+    .embedBox.wide {
+      width: 500px;
     }
     .embedToolbar {
       background: #444;
@@ -167,6 +172,8 @@
       🤪 Emoji Cursor
       <input type="checkbox" id="cursorToggle" onchange="toggleCursor()">
     </label>
+    <button onclick="toggleLayout()">Toggle Layout</button>
+    <button onclick="toggleBackground()">Toggle Background</button>
     <label>
       O-And-B Window
       <input type="checkbox" id="oAndBToggle" onchange="toggleOAndB()">
@@ -182,6 +189,7 @@
       games.forEach((url, i) => {
         const box = document.createElement('div');
         box.className = 'embedBox';
+        if (layoutWide) box.classList.add('wide');
 
         const toolbar = document.createElement('div');
         toolbar.className = 'embedToolbar';
@@ -262,7 +270,6 @@
         document.body.classList.add('emoji-cursor');
       } else {
         document.body.classList.remove('emoji-cursor');
-      }
     }
 
     let oAndBWindow = null;
@@ -284,7 +291,7 @@
         if (oAndBWindow && !oAndBWindow.closed) {
           oAndBWindow.close();
         }
-                oAndBWindow = null;
+        oAndBWindow = null;
       }
     }
 
@@ -313,6 +320,26 @@
         [games[i], games[j]] = [games[j], games[i]];
       }
       renderGames();
+    }
+
+    // Layout toggle
+    let layoutWide = false;
+    function toggleLayout() {
+      layoutWide = !layoutWide;
+      renderGames();
+    }
+
+    // Background toggle
+    let bgState = 0; // 0 = dark blue, 1 = light blue, 2 = bright blue
+    function toggleBackground() {
+      bgState = (bgState + 1) % 3;
+      if (bgState === 0) {
+        document.body.style.background = "#001f3f"; // dark blue
+      } else if (bgState === 1) {
+        document.body.style.background = "lightblue"; // light blue
+      } else if (bgState === 2) {
+        document.body.style.background = "#3399ff"; // bright blue
+      }
     }
 
     // FPS counter
