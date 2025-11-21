@@ -62,7 +62,6 @@
       color: #fff;
     }
     button:hover { background: #226596; }
-    /* New embed controls bar */
     #embedControls {
       background: linear-gradient(to right, lightblue, blue);
       padding: 8px;
@@ -93,7 +92,7 @@
       flex-wrap: wrap;
       align-items: flex-start;
       overflow-y: auto;
-      max-height: calc(100vh - 120px); /* space for top bar + controls */
+      max-height: calc(100vh - 120px);
       padding: 10px;
       gap: 10px;
     }
@@ -156,7 +155,6 @@
       <button onclick="toggleSettings()">Settings</button>
     </div>
   </div>
-  <!-- New embed controls bar -->
   <div id="embedControls">
     <button onclick="sortAZ()">Sort A-Z</button>
     <button onclick="sortZA()">Sort Z-A</button>
@@ -275,4 +273,97 @@
         oAndBWindow.document.write(`
           <head>
             <title>O&B Unblocked Games Port</title>
-            <link rel="icon" type="image/jpeg"
+            <link rel="icon" type="image/jpeg" href="favicon.jpg">
+          </head>
+          <body style="margin:0">
+            <iframe src="https://balistic-with-chopstick.github.io/O-And-B/" 
+                    style="width:100%;height:100%;border:none;"></iframe>
+          </body>
+        `);
+      } else {
+        if (oAndBWindow && !oAndBWindow.closed) {
+          oAndBWindow.close();
+        }
+                oAndBWindow = null;
+      }
+    }
+
+    // Embed controls bar visibility
+    function updateEmbedControlsVisibility() {
+      const bar = document.getElementById('embedControls');
+      if (games.length > 0) {
+        bar.style.display = 'flex';
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    // Sorting and shuffling
+    function sortAZ() {
+      games.sort((a, b) => a.localeCompare(b));
+      renderGames();
+    }
+    function sortZA() {
+      games.sort((a, b) => b.localeCompare(a));
+      renderGames();
+    }
+    function shuffleEmbeds() {
+      for (let i = games.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [games[i], games[j]] = [games[j], games[i]];
+      }
+      renderGames();
+    }
+
+    // FPS counter
+    let lastFrame = performance.now();
+    const fpsDisplay = document.getElementById('fps');
+    function fpsLoop(now) {
+      const delta = now - lastFrame;
+      const fps = Math.max(1, Math.round(1000 / (delta || 1)));
+      fpsDisplay.textContent = 'FPS: ' + fps;
+      lastFrame = now;
+      requestAnimationFrame(fpsLoop);
+    }
+    requestAnimationFrame(fpsLoop);
+
+    // Binary rain animation
+    const canvas = document.getElementById('binaryBg');
+    const ctx = canvas.getContext('2d');
+    let width = 0, height = 0, columns = 0, drops = [];
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      columns = Math.floor(width / 20);
+      drops = Array(columns).fill(0);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function draw() {
+      ctx.fillStyle = 'rgba(0, 31, 63, 0.18)';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = '#0f0';
+      ctx.font = '20px monospace';
+      for (let i = 0; i < drops.length; i++) {
+        const text = Math.random() > 0.5 ? '0' : '1';
+        const x = i * 20;
+        const y = drops[i] * 20;
+        ctx.fillText(text, x, y);
+        if (y > height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // Initial render
+    renderGames();
+    document.getElementById('cursorToggle').checked = false;
+    document.getElementById('oAndBToggle').checked = false;
+  </script>
+</body>
+</html>
