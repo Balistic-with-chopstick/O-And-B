@@ -11,8 +11,9 @@
       height: 100%;
       overflow: hidden;
       font-family: Arial, sans-serif;
-      background: #001f3f;
+      background: #001f3f; /* default dark blue */
       color: white;
+      transition: background 0.5s ease;
     }
     canvas#binaryBg {
       position: fixed;
@@ -30,6 +31,7 @@
       color: white;
       z-index: 1;
       pointer-events: none;
+      text-shadow: 0 0 8px rgba(255,255,255,0.6);
     }
     #topbar {
       background: lightblue;
@@ -40,6 +42,7 @@
       justify-content: space-between;
       position: relative;
       z-index: 2;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     #controls {
       display: flex;
@@ -62,6 +65,8 @@
       color: #fff;
     }
     button:hover { background: #226596; }
+
+    /* Embed controls bar (shown when embeds exist) */
     #embedControls {
       background: linear-gradient(to right, lightblue, blue);
       padding: 8px;
@@ -85,6 +90,8 @@
     #embedControls button:hover {
       background: rgba(255,255,255,0.4);
     }
+
+    /* Embeds container */
     #gameContainer {
       position: relative;
       z-index: 2;
@@ -92,36 +99,52 @@
       flex-wrap: wrap;
       align-items: flex-start;
       overflow-y: auto;
-      max-height: calc(100vh - 120px);
+      max-height: calc(100vh - 120px); /* topbar + controls bar */
       padding: 10px;
       gap: 10px;
+      scroll-behavior: smooth;
     }
     .embedBox {
-      background: #222;
-      border: 2px solid #555;
+      background: #1b1b1b;
+      border: 2px solid #4a4a4a;
       display: flex;
       flex-direction: column;
       width: 300px;
       height: 200px;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      transition: width 0.3s ease;
     }
+    .embedBox.wide { width: 500px; }
     .embedToolbar {
-      background: #444;
-      padding: 5px;
+      background: #2a2a2a;
+      padding: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       color: #ddd;
       font-size: 12px;
+      border-bottom: 1px solid #3a3a3a;
     }
     .embedToolbar button {
-      padding: 3px 6px;
+      padding: 4px 8px;
       font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #666;
+      background: #3a3a3a;
+      color: #eee;
+      cursor: pointer;
     }
+    .embedToolbar button:hover { background: #4a4a4a; }
     .embedFrame {
       flex: 1;
       border: none;
       width: 100%;
+      background: #0b0b0b;
     }
+
+    /* Settings menu */
     #settingsMenu {
       position: absolute;
       top: 50px;
@@ -132,10 +155,18 @@
       flex-direction: column;
       gap: 10px;
       z-index: 3;
+      border-radius: 6px;
+      border: 1px solid #555;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
-    #fps {
+    #settingsMenu label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
       font-size: 14px;
     }
+    #fps { font-size: 14px; color: #a8e6a1; }
     .emoji-cursor {
       cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='24' font-size='24'>🤪</text></svg>") 16 16, auto;
     }
@@ -144,6 +175,8 @@
 <body>
   <canvas id="binaryBg"></canvas>
   <div id="centerText">O&amp;B</div>
+
+  <!-- Top bar -->
   <div id="topbar">
     <div>O&amp;B Unblocked Games Port</div>
     <div id="controls">
@@ -155,20 +188,28 @@
       <button onclick="toggleSettings()">Settings</button>
     </div>
   </div>
+
+  <!-- Gradient controls bar -->
   <div id="embedControls">
     <button onclick="sortAZ()">Sort A-Z</button>
     <button onclick="sortZA()">Sort Z-A</button>
     <button onclick="shuffleEmbeds()">Shuffle</button>
   </div>
+
+  <!-- Embeds -->
   <div id="gameContainer"></div>
+
+  <!-- Settings menu -->
   <div id="settingsMenu">
     <div id="fps">FPS: 0</div>
     <label>
-      🤪 Emoji Cursor
+      <span>🤪 Emoji Cursor</span>
       <input type="checkbox" id="cursorToggle" onchange="toggleCursor()">
     </label>
+    <button onclick="toggleLayout()">Toggle Layout</button>
+    <button onclick="toggleBackground()">Toggle Background</button>
     <label>
-      O-And-B Window
+      <span>O-And-B Window</span>
       <input type="checkbox" id="oAndBToggle" onchange="toggleOAndB()">
     </label>
   </div>
@@ -177,11 +218,28 @@
     const gameContainer = document.getElementById('gameContainer');
     let games = JSON.parse(localStorage.getItem('games') || '[]');
 
+    // Persisted UI state
+    let layoutWide = JSON.parse(localStorage.getItem('layoutWide') || 'false');
+    let bgState = parseInt(localStorage.getItem('bgState') || '0', 10); // 0 dark, 1 light, 2 bright
+
+    /* Background state apply (keeps green binary unchanged) */
+    function applyBackground() {
+      if (bgState === 0) {
+        document.body.style.background = "#001f3f"; // dark blue
+      } else if (bgState === 1) {
+        document.body.style.background = "linear-gradient(180deg, rgba(173,216,230,0.9), rgba(173,216,230,0.7))"; // light blue glow
+      } else {
+        document.body.style.background = "linear-gradient(180deg, rgba(51,153,255,0.95), rgba(51,153,255,0.75))"; // bright blue glow
+      }
+    }
+
+    /* Render embeds */
     function renderGames() {
       gameContainer.innerHTML = '';
       games.forEach((url, i) => {
         const box = document.createElement('div');
         box.className = 'embedBox';
+        if (layoutWide) box.classList.add('wide');
 
         const toolbar = document.createElement('div');
         toolbar.className = 'embedToolbar';
@@ -189,7 +247,7 @@
           <span>Site ${i+1}</span>
           <div>
             <button onclick="fullscreen(${i})">Fullscreen</button>
-            <button onclick="openBlank('${url}')">About:Blank</button>
+            <button onclick="openBlank('${url.replace(/"/g, '&quot;')}')">About:Blank</button>
           </div>
         `;
         box.appendChild(toolbar);
@@ -205,15 +263,18 @@
       updateEmbedControlsVisibility();
     }
 
+    /* Add, clear, import, export */
     function addGame() {
-      const url = document.getElementById('urlInput').value;
-      if (url && games.length < 200) {
-        games.push(url);
-        renderGames();
-        document.getElementById('urlInput').value = '';
-      } else if (games.length >= 200) {
-        alert("Maximum of 200 embeds reached.");
+      const input = document.getElementById('urlInput');
+      const url = input.value.trim();
+      if (!url) return;
+      if (games.length >= 200) {
+        alert('Maximum of 200 embeds reached.');
+        return;
       }
+      games.push(url);
+      input.value = '';
+      renderGames();
     }
 
     function clearGames() {
@@ -223,35 +284,51 @@
 
     function exportList() {
       const code = btoa(JSON.stringify(games));
-      prompt("Export code:", code);
+      prompt('Export code:', code);
     }
 
     function importList() {
-      const code = prompt("Paste import code:");
-      if (code) {
-        games = JSON.parse(atob(code));
-        renderGames();
+      const code = prompt('Paste import code:');
+      if (!code) return;
+      try {
+        const arr = JSON.parse(atob(code));
+        if (Array.isArray(arr)) {
+          games = arr.slice(0, 200);
+          renderGames();
+        } else {
+          alert('Invalid import format.');
+        }
+      } catch {
+        alert('Import failed. Make sure the code is correct.');
       }
     }
 
-    function fullscreen(i) {
-      const iframe = gameContainer.querySelectorAll('.embedFrame')[i];
-      if (iframe.requestFullscreen) iframe.requestFullscreen();
+    /* Frame actions */
+    function fullscreen(index) {
+      const frame = gameContainer.querySelectorAll('.embedFrame')[index];
+      if (frame && frame.requestFullscreen) frame.requestFullscreen();
     }
 
     function openBlank(url) {
-      const win = window.open("about:blank", "_blank");
+      const win = window.open('about:blank', '_blank');
       win.document.write(`
         <head>
+          <meta charset="UTF-8">
           <title>O&B Unblocked Games Port</title>
           <link rel="icon" type="image/jpeg" href="favicon.jpg">
+          <style>
+            html,body { margin:0; height:100%; background:#000; }
+            iframe { width:100%; height:100%; border:none; }
+          </style>
         </head>
-        <body style="margin:0">
-          <iframe src="${url}" style="width:100%;height:100%;border:none;"></iframe>
+        <body>
+          <iframe src="${url}"></iframe>
         </body>
       `);
+      win.document.close();
     }
 
+    /* Settings toggles */
     function toggleSettings() {
       const menu = document.getElementById('settingsMenu');
       menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
@@ -269,44 +346,37 @@
     function toggleOAndB() {
       const checkbox = document.getElementById('oAndBToggle');
       if (checkbox.checked) {
-        oAndBWindow = window.open("about:blank", "_blank");
+        oAndBWindow = window.open('about:blank', '_blank');
         oAndBWindow.document.write(`
           <head>
+            <meta charset="UTF-8">
             <title>O&B Unblocked Games Port</title>
             <link rel="icon" type="image/jpeg" href="favicon.jpg">
+            <style>
+              html,body { margin:0; height:100%; background:#000; }
+              iframe { width:100%; height:100%; border:none; }
+            </style>
           </head>
-          <body style="margin:0">
-            <iframe src="https://balistic-with-chopstick.github.io/O-And-B/" 
-                    style="width:100%;height:100%;border:none;"></iframe>
+          <body>
+            <iframe src="https://balistic-with-chopstick.github.io/O-And-B/"></iframe>
           </body>
         `);
+        oAndBWindow.document.close();
       } else {
-        if (oAndBWindow && !oAndBWindow.closed) {
-          oAndBWindow.close();
-        }
-                oAndBWindow = null;
+        if (oAndBWindow && !oAndBWindow.closed) oAndBWindow.close();
+        oAndBWindow = null;
       }
     }
 
-    // Embed controls bar visibility
+    /* Controls bar visibility */
     function updateEmbedControlsVisibility() {
       const bar = document.getElementById('embedControls');
-      if (games.length > 0) {
-        bar.style.display = 'flex';
-      } else {
-        bar.style.display = 'none';
-      }
+      bar.style.display = games.length > 0 ? 'flex' : 'none';
     }
 
-    // Sorting and shuffling
-    function sortAZ() {
-      games.sort((a, b) => a.localeCompare(b));
-      renderGames();
-    }
-    function sortZA() {
-      games.sort((a, b) => b.localeCompare(a));
-      renderGames();
-    }
+    /* Sorting and shuffling */
+    function sortAZ() { games.sort((a, b) => a.localeCompare(b)); renderGames(); }
+    function sortZA() { games.sort((a, b) => b.localeCompare(a)); renderGames(); }
     function shuffleEmbeds() {
       for (let i = games.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -315,7 +385,21 @@
       renderGames();
     }
 
-    // FPS counter
+    /* Layout toggle (persisted) */
+    function toggleLayout() {
+      layoutWide = !layoutWide;
+      localStorage.setItem('layoutWide', JSON.stringify(layoutWide));
+      renderGames();
+    }
+
+    /* Background toggle (persisted) */
+    function toggleBackground() {
+      bgState = (bgState + 1) % 3;
+      localStorage.setItem('bgState', String(bgState));
+      applyBackground();
+    }
+
+    /* FPS counter */
     let lastFrame = performance.now();
     const fpsDisplay = document.getElementById('fps');
     function fpsLoop(now) {
@@ -327,7 +411,7 @@
     }
     requestAnimationFrame(fpsLoop);
 
-    // Binary rain animation
+    /* Binary rain animation (green digits) */
     const canvas = document.getElementById('binaryBg');
     const ctx = canvas.getContext('2d');
     let width = 0, height = 0, columns = 0, drops = [];
@@ -341,6 +425,7 @@
     resizeCanvas();
 
     function draw() {
+      // translucent overlay to create trails over whatever background is set
       ctx.fillStyle = 'rgba(0, 31, 63, 0.18)';
       ctx.fillRect(0, 0, width, height);
 
@@ -351,16 +436,15 @@
         const x = i * 20;
         const y = drops[i] * 20;
         ctx.fillText(text, x, y);
-        if (y > height && Math.random() > 0.975) {
-          drops[i] = 0;
-        }
+        if (y > height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
       }
       requestAnimationFrame(draw);
     }
     draw();
 
-    // Initial render
+    /* Initial state */
+    applyBackground();
     renderGames();
     document.getElementById('cursorToggle').checked = false;
     document.getElementById('oAndBToggle').checked = false;
