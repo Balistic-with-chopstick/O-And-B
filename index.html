@@ -66,7 +66,7 @@
     }
     button:hover { background: #226596; }
 
-    /* Embed controls bar (shown when embeds exist) */
+    /* Embed controls bar */
     #embedControls {
       background: linear-gradient(to right, lightblue, blue);
       padding: 8px;
@@ -99,10 +99,9 @@
       flex-wrap: wrap;
       align-items: flex-start;
       overflow-y: auto;
-      max-height: calc(100vh - 120px); /* topbar + controls bar */
+      max-height: calc(100vh - 120px);
       padding: 10px;
       gap: 10px;
-      scroll-behavior: smooth;
     }
     .embedBox {
       background: #1b1b1b;
@@ -176,7 +175,6 @@
   <canvas id="binaryBg"></canvas>
   <div id="centerText">O&amp;B</div>
 
-  <!-- Top bar -->
   <div id="topbar">
     <div>O&amp;B Unblocked Games Port</div>
     <div id="controls">
@@ -189,17 +187,14 @@
     </div>
   </div>
 
-  <!-- Gradient controls bar -->
   <div id="embedControls">
     <button onclick="sortAZ()">Sort A-Z</button>
     <button onclick="sortZA()">Sort Z-A</button>
     <button onclick="shuffleEmbeds()">Shuffle</button>
   </div>
 
-  <!-- Embeds -->
   <div id="gameContainer"></div>
 
-  <!-- Settings menu -->
   <div id="settingsMenu">
     <div id="fps">FPS: 0</div>
     <label>
@@ -217,23 +212,19 @@
   <script>
     const gameContainer = document.getElementById('gameContainer');
     let games = JSON.parse(localStorage.getItem('games') || '[]');
-
-    // Persisted UI state
     let layoutWide = JSON.parse(localStorage.getItem('layoutWide') || 'false');
-    let bgState = parseInt(localStorage.getItem('bgState') || '0', 10); // 0 dark, 1 light, 2 bright
+    let bgState = parseInt(localStorage.getItem('bgState') || '0', 10);
 
-    /* Background state apply (keeps green binary unchanged) */
     function applyBackground() {
       if (bgState === 0) {
-        document.body.style.background = "#001f3f"; // dark blue
+        document.body.style.background = "#001f3f"; // default dark blue
       } else if (bgState === 1) {
-        document.body.style.background = "linear-gradient(180deg, rgba(173,216,230,0.9), rgba(173,216,230,0.7))"; // light blue glow
+        document.body.style.background = "lightblue"; // light blue
       } else {
-        document.body.style.background = "linear-gradient(180deg, rgba(51,153,255,0.95), rgba(51,153,255,0.75))"; // bright blue glow
+        document.body.style.background = "radial-gradient(circle at center, #3399ff 0%, #001f3f 100%)"; // blue with glow
       }
     }
 
-    /* Render embeds */
     function renderGames() {
       gameContainer.innerHTML = '';
       games.forEach((url, i) => {
@@ -263,7 +254,6 @@
       updateEmbedControlsVisibility();
     }
 
-    /* Add, clear, import, export */
     function addGame() {
       const input = document.getElementById('urlInput');
       const url = input.value.trim();
@@ -303,7 +293,6 @@
       }
     }
 
-    /* Frame actions */
     function fullscreen(index) {
       const frame = gameContainer.querySelectorAll('.embedFrame')[index];
       if (frame && frame.requestFullscreen) frame.requestFullscreen();
@@ -328,7 +317,6 @@
       win.document.close();
     }
 
-    /* Settings toggles */
     function toggleSettings() {
       const menu = document.getElementById('settingsMenu');
       menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
@@ -368,13 +356,11 @@
       }
     }
 
-    /* Controls bar visibility */
     function updateEmbedControlsVisibility() {
       const bar = document.getElementById('embedControls');
       bar.style.display = games.length > 0 ? 'flex' : 'none';
     }
 
-    /* Sorting and shuffling */
     function sortAZ() { games.sort((a, b) => a.localeCompare(b)); renderGames(); }
     function sortZA() { games.sort((a, b) => b.localeCompare(a)); renderGames(); }
     function shuffleEmbeds() {
@@ -385,21 +371,18 @@
       renderGames();
     }
 
-    /* Layout toggle (persisted) */
     function toggleLayout() {
       layoutWide = !layoutWide;
       localStorage.setItem('layoutWide', JSON.stringify(layoutWide));
       renderGames();
     }
 
-    /* Background toggle (persisted) */
     function toggleBackground() {
       bgState = (bgState + 1) % 3;
       localStorage.setItem('bgState', String(bgState));
       applyBackground();
     }
 
-    /* FPS counter */
     let lastFrame = performance.now();
     const fpsDisplay = document.getElementById('fps');
     function fpsLoop(now) {
@@ -411,7 +394,6 @@
     }
     requestAnimationFrame(fpsLoop);
 
-    /* Binary rain animation (green digits) */
     const canvas = document.getElementById('binaryBg');
     const ctx = canvas.getContext('2d');
     let width = 0, height = 0, columns = 0, drops = [];
@@ -425,7 +407,6 @@
     resizeCanvas();
 
     function draw() {
-      // translucent overlay to create trails over whatever background is set
       ctx.fillStyle = 'rgba(0, 31, 63, 0.18)';
       ctx.fillRect(0, 0, width, height);
 
@@ -443,7 +424,6 @@
     }
     draw();
 
-    /* Initial state */
     applyBackground();
     renderGames();
     document.getElementById('cursorToggle').checked = false;
