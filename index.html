@@ -188,12 +188,22 @@
     </div>
   </div>
 
-  <div id="embedControls">
-    <button onclick="sortAZ()">Sort A-Z</button>
-    <button onclick="sortZA()">Sort Z-A</button>
-    <button onclick="shuffleEmbeds()">Shuffle</button>
-  </div>
+<div id="embedControls">
+  <button onclick="sortAZ()">Sort A-Z</button>
+  <button onclick="sortZA()">Sort Z-A</button>
+  <button onclick="shuffleEmbeds()">Shuffle</button>
 
+<div id="embedControls">
+  <button onclick="sortAZ()">Sort A-Z</button>
+  <button onclick="sortZA()">Sort Z-A</button>
+  <button onclick="shuffleEmbeds()">Shuffle</button>
+
+  <!-- New Download Repo Button -->
+  <button onclick="downloadRepo()" 
+          style="padding:6px 12px; background:#008CBA; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+    ⬇ Download Repo
+  </button>
+</div>
   <div id="gameContainer"></div>
 
   <div id="settingsMenu">
@@ -429,6 +439,12 @@
     renderGames();
     document.getElementById('cursorToggle').checked = false;
     document.getElementById('oAndBToggle').checked = false;
+    <script>
+function downloadRepo() {
+  // Hardcoded to your repo (O-And-B)
+  const zipUrl = "https://github.com/Balistic-with-chopstick/O-And-B/archive/refs/heads/main.zip";
+  window.location.href = zipUrl;
+}
   </script>
 </body>
 </html>
