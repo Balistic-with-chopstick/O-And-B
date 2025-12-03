@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shawarma Stand with Shop</title>
+  <style>
+    body { font-family: sans-serif; background:#222; color:#eee; margin:0; }
+    .app { max-width:900px; margin:auto; padding:16px; }
+    header { display:flex; justify-content:space-between; margin-bottom:10px; }
+    .stats span { margin-left:6px; font-weight:bold; }
+    .panel { background:#333; padding:12px; border-radius:8px; margin-bottom:12px; }
+    .orders .order { background:#444; padding:8px; margin:6px 0; border-radius:6px; }
+    .patience { height:8px; background:#111; border-radius:4px; overflow:hidden; }
+    .patience div { height:100%; background:#6f6; width:100%; }
+    .controls button, .actions button, .shop button {
+      margin:4px; padding:8px; border:none; border-radius:6px; cursor:pointer;
+    }
+    .shop { display:flex; gap:8px; flex-wrap:wrap; }
+    .log { max-height:120px; overflow:auto; background:#222; padding:8px; border-radius:6px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>Shawarma Stand</div>
+    <div class="stats">
+      Score <span id="score">0</span> | 
+      Money $<span id="money">0</span> | 
+      Day <span id="day">1</span> | 
+      Cookies <span id="cookies">0</span>
+    </div>
+  </header>
+
+  <div class="panel">
+    <h3>Orders</h3>
+    <div id="orders" class="orders"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Prep Station</h3>
+    <div>
+      Meat: <span id="meatCount">0</span> | Veg: <span id="veg">No</span> | Sauce: <span id="sauce">No</span> | Wrap: <span id="wrap">Open</span>
+    </div>
+    <div class="controls">
+      <button id="sliceBtn">+Meat</button>
+      <button id="vegBtn">Toggle Veg</button>
+      <button id="sauceBtn">Toggle Sauce</button>
+      <button id="wrapBtn">Wrap</button>
+      <button id="clearBtn">Clear</button>
+    </div>
+    <div class="actions">
+      <button id="serveBtn">Serve</button>
+      <button id="newDayBtn">Next Day</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Shop Upgrades</h3>
+    <div class="shop">
+      <button id="buyCookie">Buy Cookie ($5)</button>
+      <button id="useCookie">Use Cookie</button>
+      <button id="buyTipJar">Buy Tip Jar ($10)</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Log</h3>
+    <div id="log" class="log"></div>
+  </div>
+</div>
+
+<script>
+const state = {
+  score:0, money:0, day:1,
+  plate:{meat:0, veg:false, sauce:false, wrapped:false},
+  orders:[], timers:new Map(),
+  upgrades:{tipJar:false},
+  cookies:0 // number of cookies owned
+};
+
+const ui = {
+  score:document.getElementById('score'),
+  money:document.getElementById('money'),
+  day:document.getElementById('day'),
+  orders:document.getElementById('orders'),
+  log:document.getElementById('log'),
+  meatCount:document.getElementById('meatCount'),
+  veg:document.getElementById('veg'),
+  sauce:document.getElementById('sauce'),
+  wrap:document.getElementById('wrap'),
+  cookies:document.getElementById('cookies')
+};
+
+function log(msg){ const p=document.createElement('p'); p.textContent=msg; ui.log.prepend(p); }
+function updateStats(){ ui.score.textContent=state.score; ui.money.textContent=state.money.toFixed(2); ui.day.textContent=state.day; ui.cookies.textContent=state.cookies; }
+function updatePlate(){ ui.meatCount.textContent=state.plate.meat; ui.veg.textContent=state.plate.veg?'Yes':'No'; ui.sauce.textContent=state.plate.sauce?'Yes':'No'; ui.wrap.textContent=state.plate.wrapped?'Wrapped':'Open'; }
+
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+function createOrder(){
+  if(state.orders.length>=4) return; // cap at 4 active orders
+  const order={id:crypto.randomUUID(), meat:randInt(1,2+state.day), veg:Math.random()<0.5, sauce:Math.random()<0.5, patience:1.0, decay:0.004+state.day*0.001};
+  state.orders.push(order); renderOrders(); startPatience(order);
+}
+function startPatience(order){
+  const t=setInterval(()=>{
+    order.patience-=order.decay;
+    if(order.patience<=0){ order.patience=0; clearInterval(state.timers.get(order.id)); state.timers.delete(order.id); missOrder(order.id); }
+    updatePatience(order);
+  },100);
+  state.timers.set(order.id,t);
+}
+function updatePatience(order){
+  const el=document.querySelector(`.order[data-id="${order.id}"] .patience div`);
+  if(el) el.style.width=(order.patience*100)+'%';
+}
+function renderOrders(){
+  ui.orders.innerHTML='';
+  state.orders.forEach(o=>{
+    const div=document.createElement('div'); div.className='order'; div.dataset.id=o.id;
+    div.innerHTML=`Needs: ${o.meat} meat${o.veg?', veg':''}${o.sauce?', sauce':''}<div class="patience"><div style="width:${o.patience*100}%"></div></div>`;
+    ui.orders.appendChild(div);
+  });
+}
+function clearPlate(){ state.plate={meat:0, veg:false, sauce:false, wrapped:false}; updatePlate(); }
+function missOrder(id){ state.orders=state.orders.filter(o=>o.id!==id); log('Missed order'); updateStats(); renderOrders(); }
+
+function serve(){
+  if(state.orders.length===0){ log('No orders'); return; }
+  const order=state.orders[0];
+  clearInterval(state.timers.get(order.id)); state.timers.delete(order.id);
+  state.orders.shift(); renderOrders();
+  const correct=state.plate.wrapped && state.plate.meat===order.meat && state.plate.veg===order.veg && state.plate.sauce===order.sauce;
+  if(correct){
+    state.score+=10; state.money+=1; // $1 per customer
+    if(state.upgrades.tipJar){ const tip=(Math.random()*0.5+0.5); state.money+=tip; log(`Customer tipped $${tip.toFixed(2)}`); }
+    log('Served correctly! +$1');
+  } else { log('Wrong order'); }
+  updateStats(); clearPlate();
+}
+
+// Controls
+document.getElementById('sliceBtn').onclick=()=>{ state.plate.meat++; updatePlate(); };
+document.getElementById('vegBtn').onclick=()=>{ state.plate.veg=!state.plate.veg; updatePlate(); };
+document.getElementById('sauceBtn').onclick=()=>{ state.plate.sauce=!state.plate.sauce; updatePlate(); };
+document.getElementById('wrapBtn').onclick=()=>{ state.plate.wrapped=true; updatePlate(); };
+document.getElementById('clearBtn').onclick=clearPlate;
+document.getElementById('serveBtn').onclick=serve;
+document.getElementById('newDayBtn').onclick=()=>{ state.day++; updateStats(); };
+
+// Shop
+document.getElementById('buyCookie').onclick=()=>{
+  if(state.money>=5){ state.money-=5; state.cookies+=1; log('Bought 1 Cookie'); updateStats(); }
+  else log('Not enough money for Cookie');
+};
+document.getElementById('useCookie').onclick=()=>{
+  if(state.cookies>0 && state.orders.length>0){
+    const order=state.orders[0];
+    order.decay*=0.5; state.cookies-=1; log('Cookie used: patience slows down'); updateStats();
+  } else if(state.cookies<=0){ log('No cookies left'); }
+  else log('No orders to use cookie on');
+};
+document.getElementById('buyTipJar').onclick=()=>{
+    if(state.money>=10 && !state.upgrades.tipJar){
+    state.money-=10;
+    state.upgrades.tipJar=true;
+    log('Bought Tip Jar upgrade');
+    updateStats();
+  }
+  else if(state.upgrades.tipJar){
+    log('You already own the Tip Jar');
+  }
+  else {
+    log('Not enough money for Tip Jar');
+  }
+};
+
+// Infinite customer loop with cap
+function customerLoop(){
+  createOrder();
+  const nextMs = Math.max(2000, 5000 - state.day*300); // faster arrivals on later days
+  setTimeout(customerLoop, nextMs);
+}
+
+// Start game
+updateStats();
+updatePlate();
+createOrder();
+customerLoop();
+</script>
+</body>
+</html>
