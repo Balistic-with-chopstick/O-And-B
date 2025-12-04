@@ -67,16 +67,18 @@
     button:hover { background: #226596; }
 
     /* Embed controls bar */
-    #embedControls {
-      padding: 8px;
-      display: none;
-      gap: 10px;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-weight: bold;
-      position: relative;
-      z-index: 2;
+  #embedControls {
+  background: none; /* or transparent if you want binary background */
+  padding: 8px;
+  display: flex;    /* <-- make it visible and flex layout */
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: bold;
+  position: relative;
+  z-index: 2;
+}
     }
     #embedControls button {
       padding: 6px 12px;
