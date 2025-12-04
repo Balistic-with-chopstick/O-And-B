@@ -177,14 +177,16 @@
 
   <div id="topbar">
     <div>O&amp;B Unblocked Games Port</div>
-    <div id="controls">
-      <input id="urlInput" type="text" placeholder="Enter game URL">
-      <button onclick="addGame()">Add</button>
-      <button onclick="clearGames()">Clear</button>
-      <button onclick="exportList()">Export</button>
-      <button onclick="importList()">Import</button>
-      <button onclick="toggleSettings()">Settings</button>
-    </div>
+  <div id="controls">
+  <input id="urlInput" type="text" placeholder="Enter game URL">
+  <button onclick="addGame()">Add</button>
+  <button onclick="clearGames()">Clear</button>
+  <!-- Play Game button inserted here -->
+  <button onclick="window.location.href='game.html'">Play Game</button>
+  <button onclick="exportList()">Export</button>
+  <button onclick="importList()">Import</button>
+  <button onclick="toggleSettings()">Settings</button>
+</div>
   </div>
 
   <div id="embedControls">
