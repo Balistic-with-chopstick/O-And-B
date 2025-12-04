@@ -236,13 +236,15 @@
 
         const toolbar = document.createElement('div');
         toolbar.className = 'embedToolbar';
-        toolbar.innerHTML = `
-          <span>Site ${i+1}</span>
-          <div>
-            <button onclick="fullscreen(${i})">Fullscreen</button>
-            <button onclick="openBlank('${url.replace(/"/g, '&quot;')}')">About:Blank</button>
-          </div>
-        `;
+      toolbar.innerHTML = `
+  <span>Site ${i+1}</span>
+  <div>
+    <button onclick="fullscreen(${i})">Fullscreen</button>
+    <button onclick="openBlank('${url.replace(/"/g, '&quot;')}')">About:Blank</button>
+    <button onclick="downloadSite('${url.replace(/"/g, '&quot;')}')">Download</button>
+  </div>
+`;
+
         box.appendChild(toolbar);
 
         const iframe = document.createElement('iframe');
