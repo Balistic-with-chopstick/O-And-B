@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Unblocked Games Port</title>
+  <title>O&B Unblocked Games Port</title>
   <link rel="icon" type="image/jpeg" href="favicon.jpg">
   <style>
     body, html {
@@ -67,23 +67,17 @@
     button:hover { background: #226596; }
 
     /* Embed controls bar */
-#embedControls {
-  background: rgba(0,0,0,0.6);   /* semi-transparent bar */
-  padding: 8px;
-  display: flex;                 /* always visible */
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-weight: bold;
-  position: relative;
-  z-index: 2;
-}
-
-#embedArea {
-  margin-top: 10px;              /* space below controls bar */
-}
-
+    #embedControls {
+      background: linear-gradient(to right, lightblue, blue);
+      padding: 8px;
+      display: none;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+      position: relative;
+      z-index: 2;
     }
     #embedControls button {
       padding: 6px 12px;
@@ -110,8 +104,8 @@
       gap: 10px;
     }
     .embedBox {
-       background: #1b1b1b;
-       border: 2px solid #4a4a4a;
+      background: #1b1b1b;
+      border: 2px solid #4a4a4a;
       display: flex;
       flex-direction: column;
       width: 300px;
@@ -150,9 +144,19 @@
     }
 
     /* Settings menu */
-     function toggleSettings() {
-      const menu = document.getElementById('settingsMenu');
-      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    #settingsMenu {
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      background: #333;
+      padding: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 3;
+      border-radius: 6px;
+      border: 1px solid #555;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
     #settingsMenu label {
       display: flex;
@@ -176,7 +180,6 @@
     <div id="controls">
       <input id="urlInput" type="text" placeholder="Enter game URL">
       <button onclick="addGame()">Add</button>
-      <button onclick="window.location.href='game.html'" class="nav-button">O&amp;B Game</button>
       <button onclick="clearGames()">Clear</button>
       <button onclick="exportList()">Export</button>
       <button onclick="importList()">Import</button>
@@ -184,16 +187,12 @@
     </div>
   </div>
 
-<div id="embedControls">
-  <button onclick="sortAZ()">Sort A-Z</button>
-  <button onclick="sortZA()">Sort Z-A</button>
-  <button onclick="shuffleEmbeds()">Shuffle</button>
+  <div id="embedControls">
+    <button onclick="sortAZ()">Sort A-Z</button>
+    <button onclick="sortZA()">Sort Z-A</button>
+    <button onclick="shuffleEmbeds()">Shuffle</button>
+  </div>
 
-<div id="embedControls">
-  <button onclick="sortAZ()">Sort A-Z</button>
-  <button onclick="sortZA()">Sort Z-A</button>
-  <button onclick="shuffleEmbeds()">Shuffle</button>
-</div>
   <div id="gameContainer"></div>
 
   <div id="settingsMenu">
@@ -318,12 +317,10 @@
       win.document.close();
     }
 
- #settingsMenu {
-  display: flex;   /* instead of none */
-  flex-direction: column;
-  gap: 10px;
-  padding: 8px;
-}
+    function toggleSettings() {
+      const menu = document.getElementById('settingsMenu');
+      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    }
 
     function toggleCursor() {
       if (document.getElementById('cursorToggle').checked) {
