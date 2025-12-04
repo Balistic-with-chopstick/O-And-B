@@ -210,100 +210,144 @@
       <input type="checkbox" id="oAndBToggle" onchange="toggleOAndB()">
     </label>
   </div>
+<script>
+  const gameContainer = document.getElementById('gameContainer');
+  let games = JSON.parse(localStorage.getItem('games') || '[]');
+  let layoutWide = JSON.parse(localStorage.getItem('layoutWide') || 'false');
+  let bgState = parseInt(localStorage.getItem('bgState') || '0', 10);
 
- <script>
-    const gameContainer = document.getElementById('gameContainer');
-    let games = JSON.parse(localStorage.getItem('games') || '[]');
-    let layoutWide = JSON.parse(localStorage.getItem('layoutWide') || 'false');
-    let bgState = parseInt(localStorage.getItem('bgState') || '0', 10);
+  function applyBackground() {
+    if (bgState === 0) {
+      document.body.style.background = "#001f3f"; // default dark blue
+    } else if (bgState === 1) {
+      document.body.style.background = "lightblue"; // light blue
+    } else {
+      document.body.style.background = "radial-gradient(circle at center, #3399ff 0%, #001f3f 100%)"; // blue with glow
+    }
+  }
 
-    function applyBackground() {
-      if (bgState === 0) {
-        document.body.style.background = "#001f3f"; // default dark blue
-      } else if (bgState === 1) {
-        document.body.style.background = "lightblue"; // light blue
+  function renderGames() {
+    gameContainer.innerHTML = '';
+    games.forEach((url, i) => {
+      const box = document.createElement('div');
+      box.className = 'embedBox';
+      if (layoutWide) box.classList.add('wide');
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'embedToolbar';
+      toolbar.innerHTML = `
+        <span>Site ${i + 1}</span>
+        <div>
+          <button onclick="fullscreen(${i})">Fullscreen</button>
+          <button onclick="openBlank('${url.replace(/"/g, '&quot;')}')">About:Blank</button>
+          <button onclick="downloadSite('${url.replace(/"/g, '&quot;')}')">Download</button>
+        </div>
+      `;
+      box.appendChild(toolbar);
+
+      const iframe = document.createElement('iframe');
+      iframe.className = 'embedFrame';
+      iframe.src = url;
+      box.appendChild(iframe);
+
+      gameContainer.appendChild(box);
+    });
+    localStorage.setItem('games', JSON.stringify(games));
+    updateEmbedControlsVisibility();
+  }
+
+  function addGame() {
+    const input = document.getElementById('urlInput');
+    const url = input.value.trim();
+    if (!url) return;
+    if (games.length >= 200) {
+      alert('Maximum of 200 embeds reached.');
+      return;
+    }
+    games.push(url);
+    input.value = '';
+    renderGames();
+  }
+
+  function clearGames() {
+    games = [];
+    renderGames();
+  }
+
+  function exportList() {
+    const code = btoa(JSON.stringify(games));
+    prompt('Export code:', code);
+  }
+
+  function importList() {
+    const code = prompt('Paste import code:');
+    if (!code) return;
+    try {
+      const arr = JSON.parse(atob(code));
+      if (Array.isArray(arr)) {
+        games = arr.slice(0, 200);
+        renderGames();
       } else {
-        document.body.style.background = "radial-gradient(circle at center, #3399ff 0%, #001f3f 100%)"; // blue with glow
+        alert('Invalid import format.');
       }
+    } catch {
+      alert('Import failed. Make sure the code is correct.');
     }
+  }
 
-    function renderGames() {
-      gameContainer.innerHTML = '';
-      games.forEach((url, i) => {
-        const box = document.createElement('div');
-        box.className = 'embedBox';
-        if (layoutWide) box.classList.add('wide');
+  function fullscreen(index) {
+    const frame = gameContainer.querySelectorAll('.embedFrame')[index];
+    if (frame && frame.requestFullscreen) frame.requestFullscreen();
+  }
 
-        const toolbar = document.createElement('div');
-        toolbar.className = 'embedToolbar';
-        toolbar.innerHTML = `
-          <span>Site ${i+1}</span>
-          <div>
-            <button onclick="fullscreen(${i})">Fullscreen</button>
-            <button onclick="openBlank('${url.replace(/"/g, '&quot;')}')">About:Blank</button>
-            <button onclick="downloadSite('${url.replace(/"/g, '&quot;')}')">Download</button>
-          </div>
-        `;
-        box.appendChild(toolbar);
+  function openBlank(url) {
+    const win = window.open('about:blank', '_blank');
+    win.document.write(`
+      <head>
+        <meta charset="UTF-8">
+        <title>O&B Unblocked Games Port</title>
+        <link rel="icon" type="image/jpeg" href="favicon.jpg">
+        <style>
+          html,body { margin:0; height:100%; background:#000; }
+          iframe { width:100%; height:100%; border:none; }
+        </style>
+      </head>
+      <body>
+        <iframe src="${url}"></iframe>
+      </body>
+    `);
+    win.document.close();
+  }
 
-        const iframe = document.createElement('iframe');
-        iframe.className = 'embedFrame';
-        iframe.src = url;
-        box.appendChild(iframe);
+  // Download function (triggers browser "Save As" when allowed)
+  function downloadSite(url) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = ''; // suggests download; works for files you host or servers that allow it
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 
-        gameContainer.appendChild(box);
-      });
-      localStorage.setItem('games', JSON.stringify(games));
-      updateEmbedControlsVisibility();
+  function toggleSettings() {
+    const menu = document.getElementById('settingsMenu');
+    menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+  }
+
+  function toggleCursor() {
+    if (document.getElementById('cursorToggle').checked) {
+      document.body.classList.add('emoji-cursor');
+    } else {
+      document.body.classList.remove('emoji-cursor');
     }
+  }
 
-    function addGame() {
-      const input = document.getElementById('urlInput');
-      const url = input.value.trim();
-      if (!url) return;
-      if (games.length >= 200) {
-        alert('Maximum of 200 embeds reached.');
-        return;
-      }
-      games.push(url);
-      input.value = '';
-      renderGames();
-    }
-
-    function clearGames() {
-      games = [];
-      renderGames();
-    }
-
-    function exportList() {
-      const code = btoa(JSON.stringify(games));
-      prompt('Export code:', code);
-    }
-
-    function importList() {
-      const code = prompt('Paste import code:');
-      if (!code) return;
-      try {
-        const arr = JSON.parse(atob(code));
-        if (Array.isArray(arr)) {
-          games = arr.slice(0, 200);
-          renderGames();
-        } else {
-          alert('Invalid import format.');
-        }
-      } catch {
-        alert('Import failed. Make sure the code is correct.');
-      }
-    }
-
-    function fullscreen(index) {
-      const frame = gameContainer.querySelectorAll('.embedFrame')[index];
-      if (frame && frame.requestFullscreen) frame.requestFullscreen();
-    }
-
-    function openBlank(url) {
-      const win = window.open('about:blank', '_blank');
-      win.document.write(`
+  let oAndBWindow = null;
+  function toggleOAndB() {
+    const checkbox = document.getElementById('oAndBToggle');
+    if (checkbox.checked) {
+      oAndBWindow = window.open('about:blank', '_blank');
+      oAndBWindow.document.write(`
         <head>
           <meta charset="UTF-8">
           <title>O&B Unblocked Games Port</title>
@@ -314,134 +358,88 @@
           </style>
         </head>
         <body>
-          <iframe src="${url}"></iframe>
+          <iframe src="https://balistic-with-chopstick.github.io/O-And-B/"></iframe>
         </body>
       `);
-      win.document.close();
+      oAndBWindow.document.close();
+    } else {
+      if (oAndBWindow && !oAndBWindow.closed) oAndBWindow.close();
+      oAndBWindow = null;
     }
+  }
 
-    // NEW FUNCTION: Download site
-    function downloadSite(url) {
-      // Create a hidden link element
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = ''; // triggers "Save As" dialog in most browsers (works for files you host)
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+  function updateEmbedControlsVisibility() {
+    const bar = document.getElementById('embedControls');
+    bar.style.display = games.length > 0 ? 'flex' : 'none';
+  }
+
+  function sortAZ() { games.sort((a, b) => a.localeCompare(b)); renderGames(); }
+  function sortZA() { games.sort((a, b) => b.localeCompare(a)); renderGames(); }
+  function shuffleEmbeds() {
+    for (let i = games.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [games[i], games[j]] = [games[j], games[i]];
     }
-
-    function toggleSettings() {
-      const menu = document.getElementById('settingsMenu');
-      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
-    }
-
-    function toggleCursor() {
-      if (document.getElementById('cursorToggle').checked) {
-        document.body.classList.add('emoji-cursor');
-      } else {
-        document.body.classList.remove('emoji-cursor');
-      }
-    }
-
-    let oAndBWindow = null;
-    function toggleOAndB() {
-      const checkbox = document.getElementById('oAndBToggle');
-      if (checkbox.checked) {
-        oAndBWindow = window.open('about:blank', '_blank');
-        oAndBWindow.document.write(`
-          <head>
-            <meta charset="UTF-8">
-            <title>O&B Unblocked Games Port</title>
-            <link rel="icon" type="image/jpeg" href="favicon.jpg">
-            <style>
-              html,body { margin:0; height:100%; background:#000; }
-              iframe { width:100%; height:100%; border:none; }
-            </style>
-          </head>
-          <body>
-            <iframe src="https://balistic-with-chopstick.github.io/O-And-B/"></iframe>
-          </body>
-        `);
-        oAndBWindow.document.close();
-      } else {
-        if (oAndBWindow && !oAndBWindow.closed) oAndBWindow.close();
-        oAndBWindow = null;
-      }
-    }
-
-    function updateEmbedControlsVisibility() {
-      const bar = document.getElementById('embedControls');
-      bar.style.display = games.length > 0 ? 'flex' : 'none';
-    }
-
-    function sortAZ() { games.sort((a, b) => a.localeCompare(b)); renderGames(); }
-    function sortZA() { games.sort((a, b) => b.localeCompare(a)); renderGames(); }
-    function shuffleEmbeds() {
-      for (let i = games.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [games[i], games[j]] = [games[j], games[i]];
-      }
-      renderGames();
-    }
-
-    function toggleLayout() {
-      layoutWide = !layoutWide;
-      localStorage.setItem('layoutWide', JSON.stringify(layoutWide));
-      renderGames();
-    }
-
-    function toggleBackground() {
-      bgState = (bgState + 1) % 3;
-      localStorage.setItem('bgState', String(bgState));
-      applyBackground();
-    }
-
-    let lastFrame = performance.now();
-    const fpsDisplay = document.getElementById('fps');
-    function fpsLoop(now) {
-      const delta = now - lastFrame;
-      const fps = Math.max(1, Math.round(1000 / (delta || 1)));
-      fpsDisplay.textContent = 'FPS: ' + fps;
-      lastFrame = now;
-      requestAnimationFrame(fpsLoop);
-    }
-    requestAnimationFrame(fpsLoop);
-
-    const canvas = document.getElementById('binaryBg');
-    const ctx = canvas.getContext('2d');
-    let width = 0, height = 0, columns = 0, drops = [];
-    function resizeCanvas() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-      columns = Math.floor(width / 20);
-      drops = Array(columns).fill(0);
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    function draw() {
-      ctx.fillStyle = 'rgba(0, 31, 63, 0.18)';
-      ctx.fillRect(0, 0, width, height);
-
-      ctx.fillStyle = '#0f0';
-      ctx.font = '20px monospace';
-      for (let i = 0; i < drops.length; i++) {
-        const text = Math.random() > 0.5 ? '0' : '1';
-        const x = i * 20;
-        const y = drops[i] * 20;
-        ctx.fillText(text, x, y);
-        if (y > height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-      }
-      requestAnimationFrame(draw);
-    }
-    draw();
-
-    applyBackground();
     renderGames();
-    document.getElementById('cursorToggle').checked = false;
-    document.getElementById('oAndBToggle').checked = false;
+  }
+
+  function toggleLayout() {
+    layoutWide = !layoutWide;
+    localStorage.setItem('layoutWide', JSON.stringify(layoutWide));
+    renderGames();
+  }
+
+  function toggleBackground() {
+    bgState = (bgState + 1) % 3;
+    localStorage.setItem('bgState', String(bgState));
+    applyBackground();
+  }
+
+  let lastFrame = performance.now();
+  const fpsDisplay = document.getElementById('fps');
+  function fpsLoop(now) {
+    const delta = now - lastFrame;
+    const fps = Math.max(1, Math.round(1000 / (delta || 1)));
+    fpsDisplay.textContent = 'FPS: ' + fps;
+    lastFrame = now;
+    requestAnimationFrame(fpsLoop);
+  }
+  requestAnimationFrame(fpsLoop);
+
+  const canvas = document.getElementById('binaryBg');
+  const ctx = canvas.getContext('2d');
+  let width = 0, height = 0, columns = 0, drops = [];
+  function resizeCanvas() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    columns = Math.floor(width / 20);
+    drops = Array(columns).fill(0);
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function draw() {
+    ctx.fillStyle = 'rgba(0, 31, 63, 0.18)';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = '#0f0';
+    ctx.font = '20px monospace';
+    for (let i = 0; i < drops.length; i++) {
+      const text = Math.random() > 0.5 ? '0' : '1';
+      const x = i * 20;
+      const y = drops[i] * 20;
+      ctx.fillText(text, x, y);
+      if (y > height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  applyBackground();
+  renderGames();
+  document.getElementById('cursorToggle').checked = false;
+  document.getElementById('oAndBToggle').checked = false;
 </script>
 </body>
 </html>
