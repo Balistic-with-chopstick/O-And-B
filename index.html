@@ -211,7 +211,7 @@
     </label>
   </div>
 
-  <script>
+ <script>
     const gameContainer = document.getElementById('gameContainer');
     let games = JSON.parse(localStorage.getItem('games') || '[]');
     let layoutWide = JSON.parse(localStorage.getItem('layoutWide') || 'false');
@@ -236,15 +236,14 @@
 
         const toolbar = document.createElement('div');
         toolbar.className = 'embedToolbar';
-      toolbar.innerHTML = `
-  <span>Site ${i+1}</span>
-  <div>
-    <button onclick="fullscreen(${i})">Fullscreen</button>
-    <button onclick="openBlank('${url.replace(/"/g, '&quot;')}')">About:Blank</button>
-    <button onclick="downloadSite('${url.replace(/"/g, '&quot;')}')">Download</button>
-  </div>
-`;
-
+        toolbar.innerHTML = `
+          <span>Site ${i+1}</span>
+          <div>
+            <button onclick="fullscreen(${i})">Fullscreen</button>
+            <button onclick="openBlank('${url.replace(/"/g, '&quot;')}')">About:Blank</button>
+            <button onclick="downloadSite('${url.replace(/"/g, '&quot;')}')">Download</button>
+          </div>
+        `;
         box.appendChild(toolbar);
 
         const iframe = document.createElement('iframe');
@@ -319,6 +318,17 @@
         </body>
       `);
       win.document.close();
+    }
+
+    // NEW FUNCTION: Download site
+    function downloadSite(url) {
+      // Create a hidden link element
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = ''; // triggers "Save As" dialog in most browsers (works for files you host)
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     function toggleSettings() {
@@ -432,6 +442,6 @@
     renderGames();
     document.getElementById('cursorToggle').checked = false;
     document.getElementById('oAndBToggle').checked = false;
-  </script>
+</script>
 </body>
 </html>
