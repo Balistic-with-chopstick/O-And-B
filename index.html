@@ -67,10 +67,10 @@
     button:hover { background: #226596; }
 
     /* Embed controls bar */
-  #embedControls {
-  background: none; /* or transparent if you want binary background */
+#embedControls {
+  background: rgba(0,0,0,0.6);   /* semi-transparent bar */
   padding: 8px;
-  display: flex;    /* <-- make it visible and flex layout */
+  display: flex;                 /* always visible */
   gap: 10px;
   justify-content: center;
   align-items: center;
@@ -79,6 +79,11 @@
   position: relative;
   z-index: 2;
 }
+
+#embedArea {
+  margin-top: 10px;              /* space below controls bar */
+}
+
     }
     #embedControls button {
       padding: 6px 12px;
@@ -145,19 +150,9 @@
     }
 
     /* Settings menu */
-    #settingsMenu {
-      position: absolute;
-      top: 50px;
-      right: 10px;
-      background: #333;
-      padding: 10px;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 3;
-      border-radius: 6px;
-      border: 1px solid #555;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+     function toggleSettings() {
+      const menu = document.getElementById('settingsMenu');
+      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
     }
     #settingsMenu label {
       display: flex;
