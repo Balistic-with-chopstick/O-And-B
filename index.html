@@ -323,10 +323,12 @@
       win.document.close();
     }
 
-    function toggleSettings() {
-      const menu = document.getElementById('settingsMenu');
-      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
-    }
+ #settingsMenu {
+  display: flex;   /* instead of none */
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px;
+}
 
     function toggleCursor() {
       if (document.getElementById('cursorToggle').checked) {
