@@ -319,14 +319,47 @@
     win.document.close();
   }
 
-  // Download function (triggers browser "Save As" when allowed)
-  function downloadSite(url) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = ''; // suggests download; works for files you host or servers that allow it
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+function downloadSite(url) {
+  try {
+    const u = new URL(url, window.location.href);
+    const isSameOrigin = u.origin === window.location.origin;
+
+    // Try same-origin fetch -> Blob -> download
+    if (isSameOrigin) {
+      fetch(u.href, { credentials: 'same-origin' })
+        .then(res => {
+          if (!res.ok) throw new Error('Network error: ' + res.status);
+          return res.blob();
+        })
+        .then(blob => {
+          // Derive a filename from the URL or default to index.html
+          const pathname = u.pathname.replace(/\/+$/, '');
+          let filename = pathname.split('/').pop() || 'index.html';
+          if (!/\.[a-z0-9]+$/i.test(filename)) filename = filename + '.html';
+
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+        })
+        .catch(() => fallbackOpen(u.href));
+      return;
+    }
+
+    // External: cannot fetch due to CORS, use fallback
+    fallbackOpen(u.href);
+  } catch {
+    // If URL parsing fails, fallback
+    fallbackOpen(url);
+  }
+}
+
+function fallbackOpen(href) {
+  window.open(href, '_blank');
+  alert('This site cannot be downloaded directly. It has been opened in a new tab—use “Save Page As…” to save it.');
   }
 
   function toggleSettings() {
