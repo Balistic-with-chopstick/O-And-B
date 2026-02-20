@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Animated Slot Machine</title>
+  <title>Slot Machine Lets Go Gambling</title>
   <style>
     body {
       background: #181818;
@@ -45,13 +45,13 @@
       user-select: none;
     }
     .slot.spin {
-      animation: spin 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+      animation: spin-down 0.7s cubic-bezier(.68,-0.55,.27,1.55);
     }
-    @keyframes spin {
-      0% { transform: scale(1) rotateX(0deg); }
-      40% { transform: scale(1.2) rotateX(180deg); }
-      70% { transform: scale(0.9) rotateX(270deg); }
-      100% { transform: scale(1) rotateX(360deg); }
+    @keyframes spin-down {
+      0% { transform: scale(1) translateY(0); }
+      40% { transform: scale(1.2) translateY(60px); }
+      70% { transform: scale(0.9) translateY(80px); }
+      100% { transform: scale(1) translateY(0); }
     }
     .spin-btn {
       background: linear-gradient(90deg, #ffb347, #ffcc33);
