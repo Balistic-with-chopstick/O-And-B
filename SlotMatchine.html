@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animated Slot Machine</title>
+  <style>
+    body {
+      background: #181818;
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .slot-machine {
+      display: grid;
+      grid-template-rows: repeat(3, 100px);
+      grid-template-columns: repeat(4, 100px);
+      gap: 10px;
+      margin-bottom: 30px;
+      background: #222;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px #000a;
+      padding: 20px;
+    }
+    .slot {
+      width: 100px;
+      height: 100px;
+      background: #333;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      box-shadow: 0 2px 8px #0005;
+      transition: transform 0.3s cubic-bezier(.68,-0.55,.27,1.55);
+      will-change: transform;
+      user-select: none;
+    }
+    .slot.spin {
+      animation: spin 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+    }
+    @keyframes spin {
+      0% { transform: scale(1) rotateX(0deg); }
+      40% { transform: scale(1.2) rotateX(180deg); }
+      70% { transform: scale(0.9) rotateX(270deg); }
+      100% { transform: scale(1) rotateX(360deg); }
+    }
+    .spin-btn {
+      background: linear-gradient(90deg, #ffb347, #ffcc33);
+      color: #222;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 40px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #0005;
+      transition: background 0.2s;
+    }
+    .spin-btn:active {
+      background: linear-gradient(90deg, #ffcc33, #ffb347);
+    }
+  </style>
+</head>
+<body>
+  <h1>Animated Slot Machine</h1>
+  <div class="slot-machine" id="slotMachine"></div>
+  <button class="spin-btn" id="spinBtn">Spin</button>
+  <script src="slot-machine.js"></script>
+</body>
+</html>
