@@ -28,7 +28,7 @@
       letter-spacing: 2px;
       color: #ffcc33;
       text-shadow: 0 0 24px #ffb34780, 0 2px 0 #a06000;
-      margin-bottom: 28px;
+      margin-bottom: 12px;
     }
 
     .slot-machine {
@@ -42,25 +42,54 @@
       padding: 20px;
       border: 2px solid #3a3a3a;
       margin-bottom: 30px;
+      position: relative;
     }
 
-    /* Each slot is now a clipping window */
     .slot {
       width: 100px;
       height: 100px;
       background: #1c1c1c;
       border-radius: 12px;
-      overflow: hidden;           /* ← clips symbols outside the square */
+      overflow: hidden;
       position: relative;
       box-shadow: inset 0 2px 8px #0009, 0 1px 0 #ffffff10;
       border: 1.5px solid #444;
+      transition: border-color 0.3s, box-shadow 0.3s, filter 0.4s;
     }
 
-    /* The strip scrolls downward inside the slot */
+    /* Win highlight states */
+    .slot.win-3row {
+      border-color: #00e5ff;
+      box-shadow: 0 0 18px #00e5ff99, inset 0 0 12px #00e5ff22;
+      animation: pulse-blue 1s ease-in-out infinite;
+    }
+    .slot.win-4row {
+      border-color: #ff4cf5;
+      box-shadow: 0 0 24px #ff4cf5bb, inset 0 0 16px #ff4cf533;
+      animation: pulse-pink 0.8s ease-in-out infinite;
+    }
+    .slot.win-diag {
+      border-color: #39ff14;
+      box-shadow: 0 0 20px #39ff14aa, inset 0 0 14px #39ff1422;
+      animation: pulse-green 0.9s ease-in-out infinite;
+    }
+    .slot.win-jackpot {
+      border-color: #ffd700;
+      box-shadow: 0 0 30px #ffd700cc, inset 0 0 20px #ffd70044;
+      animation: pulse-gold 0.5s ease-in-out infinite;
+    }
+    .slot.dimmed {
+      filter: brightness(0.35) saturate(0.3);
+    }
+
+    @keyframes pulse-blue  { 0%,100%{box-shadow:0 0 14px #00e5ff88} 50%{box-shadow:0 0 32px #00e5ffdd} }
+    @keyframes pulse-pink  { 0%,100%{box-shadow:0 0 14px #ff4cf588} 50%{box-shadow:0 0 36px #ff4cf5ee} }
+    @keyframes pulse-green { 0%,100%{box-shadow:0 0 14px #39ff1488} 50%{box-shadow:0 0 34px #39ff14dd} }
+    @keyframes pulse-gold  { 0%,100%{box-shadow:0 0 20px #ffd700aa} 50%{box-shadow:0 0 50px #ffd700ff,0 0 80px #ffb34766} }
+
     .slot-strip {
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -77,9 +106,7 @@
       flex-shrink: 0;
     }
 
-    /* Subtle top/bottom fade to reinforce the window feel */
-    .slot::before,
-    .slot::after {
+    .slot::before, .slot::after {
       content: '';
       position: absolute;
       left: 0; right: 0;
@@ -87,14 +114,8 @@
       z-index: 2;
       pointer-events: none;
     }
-    .slot::before {
-      top: 0;
-      background: linear-gradient(to bottom, #1c1c1cee, transparent);
-    }
-    .slot::after {
-      bottom: 0;
-      background: linear-gradient(to top, #1c1c1cee, transparent);
-    }
+    .slot::before { top: 0;    background: linear-gradient(to bottom, #1c1c1cee, transparent); }
+    .slot::after  { bottom: 0; background: linear-gradient(to top,   #1c1c1cee, transparent); }
 
     .spin-btn {
       background: linear-gradient(90deg, #ffb347, #ffcc33);
@@ -104,47 +125,138 @@
       padding: 14px 48px;
       font-size: 1.2rem;
       font-family: 'Bungee', sans-serif;
-      font-weight: bold;
       cursor: pointer;
       letter-spacing: 1px;
       box-shadow: 0 4px 18px #ffb34755, 0 1px 0 #fff4 inset;
       transition: transform 0.1s, box-shadow 0.1s;
     }
-    .spin-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 28px #ffb34788;
-    }
-    .spin-btn:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 8px #ffb34744;
-    }
-    .spin-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .spin-btn:hover  { transform: translateY(-2px); box-shadow: 0 8px 28px #ffb34788; }
+    .spin-btn:active { transform: translateY(1px);  box-shadow: 0 2px 8px #ffb34744; }
+    .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     #winMsg {
-      margin-top: 18px;
-      font-size: 1.5rem;
-      color: #ffcc33;
-      text-shadow: 0 0 16px #ffb347;
-      min-height: 2rem;
-      letter-spacing: 1px;
-      animation: pop 0.4s ease;
+      margin-top: 16px;
+      min-height: 2.4rem;
+      text-align: center;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
-    @keyframes pop {
-      0% { transform: scale(0.5); opacity: 0; }
-      60% { transform: scale(1.15); }
-      100% { transform: scale(1); opacity: 1; }
+    .tag {
+      display: inline-block;
+      border-radius: 8px;
+      padding: 5px 16px;
+      font-size: 0.95rem;
+      animation: popIn 0.4s cubic-bezier(.68,-0.55,.27,1.55) both;
+    }
+    .tag-3row    { background:#00e5ff18; color:#00e5ff; border:1.5px solid #00e5ff88; }
+    .tag-4row    { background:#ff4cf518; color:#ff4cf5; border:1.5px solid #ff4cf588; }
+    .tag-diag    { background:#39ff1418; color:#39ff14; border:1.5px solid #39ff1488; }
+    .tag-jackpot {
+      background: linear-gradient(90deg,#ffd70022,#ffb34722);
+      color: #ffd700;
+      border: 2px solid #ffd700;
+      font-size: 1.2rem !important;
+      text-shadow: 0 0 10px #ffd700;
+      box-shadow: 0 0 20px #ffd70055;
+    }
+
+    @keyframes popIn {
+      0%  { transform: scale(0.4) rotate(-5deg); opacity:0; }
+      60% { transform: scale(1.1) rotate(2deg); }
+      100%{ transform: scale(1) rotate(0deg);   opacity:1; }
+    }
+
+    /* Jackpot full-screen overlay */
+    #jackpotOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000000dd;
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #jackpotOverlay.active { display: flex; }
+
+    #jackpotText {
+      font-family: 'Bungee Shade', cursive;
+      font-size: 5rem;
+      color: #ffd700;
+      text-shadow: 0 0 40px #ffd700, 0 0 80px #ffb347, 0 4px 0 #7a5000;
+      letter-spacing: 6px;
+      animation: jackpotBounce 0.55s ease-in-out infinite alternate;
+    }
+    #jackpotBigEmoji {
+      font-size: 4rem;
+      animation: spinEmoji 0.8s linear infinite;
+    }
+    #jackpotSub {
+      font-size: 1.2rem;
+      color: #fff8;
+      letter-spacing: 2px;
+    }
+    #jackpotClose {
+      margin-top: 12px;
+      background: #ffd700;
+      color: #1a0e00;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 40px;
+      font-family: 'Bungee', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 20px #ffd70066;
+      transition: transform 0.1s;
+    }
+    #jackpotClose:hover { transform: scale(1.05); }
+
+    @keyframes jackpotBounce {
+      from { transform: scale(1) rotate(-2deg); }
+      to   { transform: scale(1.08) rotate(2deg); }
+    }
+    @keyframes spinEmoji {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* Legend */
+    #legend {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      font-size: 0.7rem;
+      opacity: 0.65;
+      flex-wrap: wrap;
+      justify-content: center;
     }
   </style>
 </head>
 <body>
   <h1>🎰 Slot Machine</h1>
+
+  <div id="legend">
+    <span class="tag tag-3row">3 IN A ROW</span>
+    <span class="tag tag-4row">4 IN A ROW</span>
+    <span class="tag tag-diag">DIAGONAL</span>
+    <span class="tag tag-jackpot">✨ JACKPOT</span>
+  </div>
+
   <div class="slot-machine" id="slotMachine"></div>
   <button class="spin-btn" id="spinBtn">SPIN</button>
   <div id="winMsg"></div>
+
+  <!-- Jackpot overlay -->
+  <div id="jackpotOverlay">
+    <div id="jackpotText">JACKPOT!</div>
+    <div id="jackpotBigEmoji">🌟</div>
+    <div id="jackpotSub">ALL 12 MATCH!</div>
+    <button id="jackpotClose">✨ COLLECT ✨</button>
+  </div>
 
   <script>
     const IMAGES = [
@@ -153,53 +265,252 @@
       '🍔','🍕','🍩','🍪','🍫','🍿','🍦','🍭'
     ];
 
-    const ROWS = 3;
-    const COLS = 4;
-    const ITEM_H = 100;        // must match .slot height in px
-    const SPIN_SYMBOLS = 18;   // how many symbols scroll before landing
+    const ROWS = 3, COLS = 4, ITEM_H = 100, SPIN_SYMBOLS = 18;
 
-    const slotMachine = document.getElementById('slotMachine');
-    const spinBtn = document.getElementById('spinBtn');
-    const winMsg = document.getElementById('winMsg');
+    // ── Win-type probabilities (mutually exclusive tiers) ─────────
+    // Roll once per spin: jackpot → 4row → diag → 3row → nothing
+    const P_JACKPOT = 0.04;   //  4%  – very rare
+    const P_4ROW    = 0.08;   //  8%  – rare       (cumulative 12%)
+    const P_DIAG    = 0.20;   // 20%  – uncommon   (cumulative 32%)
+    const P_3ROW    = 0.55;   // 55%  – common     (cumulative 87%)
+    // ~13% nothing
 
-    // Store the current face value for each cell
-    const currentValues = [];
+    const slotMachine    = document.getElementById('slotMachine');
+    const spinBtn        = document.getElementById('spinBtn');
+    const winMsg         = document.getElementById('winMsg');
+    const jackpotOverlay = document.getElementById('jackpotOverlay');
+    const jackpotBigEmoji= document.getElementById('jackpotBigEmoji');
+    const jackpotSub     = document.getElementById('jackpotSub');
 
-    // Build the grid
+    document.getElementById('jackpotClose').addEventListener('click', () => {
+      jackpotOverlay.classList.remove('active');
+    });
+
+    // ── Build grid ────────────────────────────────────────────────
     for (let i = 0; i < ROWS * COLS; i++) {
-      const cell = document.createElement('div');
+      const cell  = document.createElement('div');
       cell.className = 'slot';
-
       const strip = document.createElement('div');
       strip.className = 'slot-strip';
-
-      const sym = IMAGES[Math.floor(Math.random() * IMAGES.length)];
-      currentValues[i] = sym;
-
-      const face = document.createElement('div');
+      const face  = document.createElement('div');
       face.className = 'slot-symbol';
-      face.textContent = sym;
+      face.textContent = IMAGES[Math.floor(Math.random() * IMAGES.length)];
       strip.appendChild(face);
-
       cell.appendChild(strip);
       slotMachine.appendChild(cell);
     }
 
-    /**
-     * Animate a single reel strip downward, land on `finalSymbol`.
-     * Returns a Promise that resolves when animation finishes.
-     */
+    // ── Helpers ───────────────────────────────────────────────────
+    const rand  = () => Math.random();
+    const pick  = () => IMAGES[Math.floor(rand() * IMAGES.length)];
+    const toGrid = flat => {
+      const g = [];
+      for (let r = 0; r < ROWS; r++) g.push(flat.slice(r*COLS, (r+1)*COLS));
+      return g;
+    };
+    const flatIdx = (r, c) => r * COLS + c;
+    const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+    // ── Result builders ───────────────────────────────────────────
+
+    // Jackpot: all cells the same
+    function buildJackpot() {
+      const sym = pick();
+      return Array(ROWS * COLS).fill(sym);
+    }
+
+    // 4-in-a-row: one full random row all matches; rest random
+    function build4Row() {
+      const flat = Array.from({ length: ROWS * COLS }, pick);
+      const row  = Math.floor(rand() * ROWS);
+      const sym  = pick();
+      for (let c = 0; c < COLS; c++) flat[flatIdx(row, c)] = sym;
+      return flat;
+    }
+
+    // Diagonal: place a 3-symbol diagonal; rest random
+    function buildDiag() {
+      const flat = Array.from({ length: ROWS * COLS }, pick);
+      // Possible 3-cell diagonals on a 3×4 grid (down-right or down-left)
+      const diagOptions = [];
+      for (let r = 0; r <= ROWS-3; r++) {
+        for (let c = 0; c <= COLS-3; c++)
+          diagOptions.push([[r,c],[r+1,c+1],[r+2,c+2]]);
+        for (let c = COLS-1; c >= 2; c--)
+          diagOptions.push([[r,c],[r+1,c-1],[r+2,c-2]]);
+      }
+      const diag = diagOptions[Math.floor(rand() * diagOptions.length)];
+      const sym  = pick();
+      diag.forEach(([r,c]) => { flat[flatIdx(r,c)] = sym; });
+      // Ensure it isn't accidentally also a 4-row
+      return flat;
+    }
+
+    // 3-in-a-row: exactly 3 consecutive in a random row; avoid accidental 4-row
+    function build3Row() {
+      let flat, attempts = 0;
+      do {
+        flat = Array.from({ length: ROWS * COLS }, pick);
+        const row   = Math.floor(rand() * ROWS);
+        const start = Math.floor(rand() * (COLS - 2));  // 0 or 1 → cols 0-2 or 1-3
+        const sym   = pick();
+        flat[flatIdx(row, start)]   = sym;
+        flat[flatIdx(row, start+1)] = sym;
+        flat[flatIdx(row, start+2)] = sym;
+        // Make the 4th cell of that row definitely different to prevent accidental 4-row
+        const fourthCol = start === 0 ? 3 : 0;
+        let diff = pick();
+        while (diff === sym) diff = pick();
+        flat[flatIdx(row, fourthCol)] = diff;
+        attempts++;
+      } while (attempts < 5 && toGrid(flat)[0].every(v => v === toGrid(flat)[0][0]));
+      return flat;
+    }
+
+    // Pure random (no forced win)
+    function buildRandom() {
+      return Array.from({ length: ROWS * COLS }, pick);
+    }
+
+    // ── Choose result based on probability roll ───────────────────
+    function buildResults() {
+      const r = rand();
+      if (r < P_JACKPOT)                        return { type: 'jackpot', flat: buildJackpot() };
+      if (r < P_JACKPOT + P_4ROW)               return { type: '4row',    flat: build4Row()   };
+      if (r < P_JACKPOT + P_4ROW + P_DIAG)      return { type: 'diag',    flat: buildDiag()   };
+      if (r < P_JACKPOT + P_4ROW + P_DIAG + P_3ROW) return { type: '3row', flat: build3Row()  };
+      return { type: 'none', flat: buildRandom() };
+    }
+
+    // ── Pattern detection ─────────────────────────────────────────
+    function detectPatterns(flat) {
+      const g        = toGrid(flat);
+      // Stores per-type: Set of flat indices
+      const cells3   = new Set();
+      const cells4   = new Set();
+      const cellsDiag= new Set();
+      const tags     = [];
+
+      // 4-in-a-row (full row)
+      for (let r = 0; r < ROWS; r++) {
+        if (g[r][0] && g[r].every(v => v === g[r][0])) {
+          [0,1,2,3].forEach(c => cells4.add(flatIdx(r,c)));
+          if (!tags.includes('4row')) tags.push('4row');
+        }
+      }
+
+      // 3-in-a-row (any 3 consecutive, not already a full 4)
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c <= COLS-3; c++) {
+          const sym = g[r][c];
+          if (sym && g[r][c+1] === sym && g[r][c+2] === sym) {
+            const isFour = g[r].every(v => v === sym);
+            if (!isFour) {
+              [c,c+1,c+2].forEach(dc => cells3.add(flatIdx(r, dc)));
+              if (!tags.includes('3row')) tags.push('3row');
+            }
+          }
+        }
+      }
+
+      // Diagonals
+      const addDiag = cells => { cells.forEach(i => cellsDiag.add(i)); if (!tags.includes('diag')) tags.push('diag'); };
+      for (let r = 0; r <= ROWS-3; r++) {
+        for (let c = 0; c <= COLS-3; c++) {
+          const sym = g[r][c];
+          if (sym && g[r+1][c+1] === sym && g[r+2][c+2] === sym)
+            addDiag([flatIdx(r,c), flatIdx(r+1,c+1), flatIdx(r+2,c+2)]);
+        }
+        for (let c = COLS-1; c >= 2; c--) {
+          const sym = g[r][c];
+          if (sym && g[r+1][c-1] === sym && g[r+2][c-2] === sym)
+            addDiag([flatIdx(r,c), flatIdx(r+1,c-1), flatIdx(r+2,c-2)]);
+        }
+      }
+
+      const allWin = new Set([...cells3, ...cells4, ...cellsDiag]);
+      return { cells3, cells4, cellsDiag, allWin, tags };
+    }
+
+    // ── Highlight helpers ─────────────────────────────────────────
+    function clearHighlights() {
+      slotMachine.querySelectorAll('.slot').forEach(s =>
+        s.classList.remove('win-3row','win-4row','win-diag','win-jackpot','dimmed'));
+    }
+
+    function applySet(cellSet, cls, allWinCells) {
+      const slots = slotMachine.querySelectorAll('.slot');
+      slots.forEach((slot, i) => {
+        if (cellSet.has(i)) {
+          // Remove lower-priority class if present, add new one
+          slot.classList.remove('win-3row','win-diag','dimmed');
+          slot.classList.add(cls);
+        }
+      });
+    }
+
+    function applyDimmed(allWinCells) {
+      slotMachine.querySelectorAll('.slot').forEach((slot, i) => {
+        if (!allWinCells.has(i)) slot.classList.add('dimmed');
+      });
+    }
+
+    // ── Staged jackpot reveal ─────────────────────────────────────
+    // Lights up 3row → diag → 4row → all jackpot gold, then shows overlay
+    async function stagedJackpotReveal(flat) {
+      const slots = slotMachine.querySelectorAll('.slot');
+
+      // Treat every cell as every pattern type for reveal staging
+      // Stage 1: 3row cyan
+      slots.forEach(s => s.classList.add('win-3row'));
+      addWinTag('3row');
+      await sleep(700);
+
+      // Stage 2: switch to diag green
+      slots.forEach(s => { s.classList.remove('win-3row'); s.classList.add('win-diag'); });
+      addWinTag('diag');
+      await sleep(700);
+
+      // Stage 3: switch to 4row pink
+      slots.forEach(s => { s.classList.remove('win-diag'); s.classList.add('win-4row'); });
+      addWinTag('4row');
+      await sleep(700);
+
+      // Stage 4: all gold jackpot
+      slots.forEach(s => { s.classList.remove('win-4row'); s.classList.add('win-jackpot'); });
+      winMsg.innerHTML = `<span class="tag tag-jackpot" style="animation-delay:0s">✨ JACKPOT — ${flat[0]} EVERYWHERE! ✨</span>`;
+      await sleep(600);
+
+      // Show overlay
+      jackpotBigEmoji.textContent = flat[0];
+      jackpotSub.textContent = `ALL 12 ARE ${flat[0]}!`;
+      jackpotOverlay.classList.add('active');
+    }
+
+    // ── Win message helpers ───────────────────────────────────────
+    const tagLabels = {
+      '3row': ['tag-3row', '3 IN A ROW 🔵'],
+      '4row': ['tag-4row', '4 IN A ROW 💜'],
+      'diag': ['tag-diag',  'DIAGONAL 🟢'],
+    };
+    let tagDelay = 0;
+    function addWinTag(type) {
+      const [cls, label] = tagLabels[type];
+      const span = document.createElement('span');
+      span.className = `tag ${cls}`;
+      span.style.animationDelay = `${tagDelay}s`;
+      span.textContent = label;
+      winMsg.appendChild(span);
+      tagDelay += 0.12;
+    }
+
+    // ── Animate a single reel strip ───────────────────────────────
     function animateReel(strip, finalSymbol, delay) {
       return new Promise(resolve => {
         setTimeout(() => {
-          // Build the full symbol list: random padding + final symbol at end
-          const symbolList = [];
-          for (let i = 0; i < SPIN_SYMBOLS; i++) {
-            symbolList.push(IMAGES[Math.floor(Math.random() * IMAGES.length)]);
-          }
+          const symbolList = Array.from({ length: SPIN_SYMBOLS }, pick);
           symbolList.push(finalSymbol);
 
-          // Populate strip (clear first)
           strip.innerHTML = '';
           symbolList.forEach(s => {
             const div = document.createElement('div');
@@ -208,82 +519,75 @@
             strip.appendChild(div);
           });
 
-          // Start position: strip sits with first symbol visible (translateY = 0)
-          // Target: last symbol visible → translateY = -SPIN_SYMBOLS * ITEM_H
-          // Because we scroll DOWN, we actually go from a negative top offset
-          // toward 0, making it look like symbols fall downward.
-
-          const totalItems = symbolList.length;          // SPIN_SYMBOLS + 1
-          const startY = -(totalItems - 1) * ITEM_H;    // first symbol shown
-          const endY   = 0;                              // last symbol shown
-
-          strip.style.transform = `translateY(${startY}px)`;
           strip.style.transition = 'none';
-
-          // Force reflow
+          strip.style.transform  = `translateY(${-(symbolList.length-1)*ITEM_H}px)`;
           strip.getBoundingClientRect();
 
-          // Later columns spin a touch longer for dramatic effect
-          const spinDuration = 900 + (delay / 220) * 200;
-
-          strip.style.transition = `transform ${spinDuration}ms cubic-bezier(0.15, 0.85, 0.35, 1.0)`;
-          strip.style.transform = `translateY(${endY}px)`;
+          const dur = 900 + (delay / 220) * 200;
+          strip.style.transition = `transform ${dur}ms cubic-bezier(0.15,0.85,0.35,1.0)`;
+          strip.style.transform  = 'translateY(0px)';
 
           setTimeout(() => {
-            // Clean strip to just the final symbol so it stays tidy
             strip.innerHTML = '';
             strip.style.transition = 'none';
-            strip.style.transform = 'translateY(0)';
+            strip.style.transform  = 'translateY(0)';
             const face = document.createElement('div');
             face.className = 'slot-symbol';
             face.textContent = finalSymbol;
             strip.appendChild(face);
-            resolve(finalSymbol);
-          }, spinDuration + 50);
-
+            resolve();
+          }, dur + 50);
         }, delay);
       });
     }
 
+    // ── Main spin ─────────────────────────────────────────────────
     async function spinSlots() {
       spinBtn.disabled = true;
-      winMsg.textContent = '';
+      winMsg.innerHTML = '';
+      tagDelay = 0;
+      clearHighlights();
 
-      const slots = slotMachine.querySelectorAll('.slot');
+      const { type, flat } = buildResults();
+
+      // Spin all reels
+      const slots    = slotMachine.querySelectorAll('.slot');
       const promises = [];
-      const results = [];
-
       slots.forEach((slot, i) => {
-        const col = i % COLS;   // column index (0–3)
+        const col   = i % COLS;
         const strip = slot.querySelector('.slot-strip');
-        const finalSymbol = IMAGES[Math.floor(Math.random() * IMAGES.length)];
-        results[i] = finalSymbol;
-        // All cells in the same column share the same delay → spin together
-        const delay = col * 220;
-        promises.push(animateReel(strip, finalSymbol, delay));
+        promises.push(animateReel(strip, flat[i], col * 220));
       });
-
       await Promise.all(promises);
 
-      // Update stored values
-      results.forEach((v, i) => currentValues[i] = v);
+      // ── Reveal ────────────────────────────────────────────────
+      if (type === 'jackpot') {
+        await stagedJackpotReveal(flat);
+      } else {
+        const { cells3, cells4, cellsDiag, allWin, tags } = detectPatterns(flat);
 
-      checkWin(results);
-      spinBtn.disabled = false;
-    }
+        if (allWin.size > 0) {
+          applyDimmed(allWin);
 
-    function checkWin(results) {
-      let win = false;
-      for (let r = 0; r < ROWS; r++) {
-        const row = results.slice(r * COLS, (r + 1) * COLS);
-        if (row.every(img => img === row[0])) {
-          win = true;
-          break;
+          // Stagger: 3row first, then diag, then 4row
+          if (cells3.size > 0) {
+            applySet(cells3, 'win-3row', allWin);
+            addWinTag('3row');
+            await sleep(400);
+          }
+          if (cellsDiag.size > 0) {
+            applySet(cellsDiag, 'win-diag', allWin);
+            addWinTag('diag');
+            await sleep(400);
+          }
+          if (cells4.size > 0) {
+            applySet(cells4, 'win-4row', allWin);
+            addWinTag('4row');
+          }
         }
       }
-      if (win) {
-        winMsg.textContent = '🎉 YOU WIN! ROW MATCH!';
-      }
+
+      spinBtn.disabled = false;
     }
 
     spinBtn.addEventListener('click', spinSlots);
