@@ -223,8 +223,8 @@
           // Force reflow
           strip.getBoundingClientRect();
 
-          // Fast initial speed with ease-out deceleration
-          const spinDuration = 900 + (delay / 80) * 120; // later reels take a bit longer
+          // Later columns spin a touch longer for dramatic effect
+          const spinDuration = 900 + (delay / 220) * 200;
 
           strip.style.transition = `transform ${spinDuration}ms cubic-bezier(0.15, 0.85, 0.35, 1.0)`;
           strip.style.transform = `translateY(${endY}px)`;
@@ -254,10 +254,12 @@
       const results = [];
 
       slots.forEach((slot, i) => {
+        const col = i % COLS;   // column index (0–3)
         const strip = slot.querySelector('.slot-strip');
         const finalSymbol = IMAGES[Math.floor(Math.random() * IMAGES.length)];
         results[i] = finalSymbol;
-        const delay = i * 80;
+        // All cells in the same column share the same delay → spin together
+        const delay = col * 220;
         promises.push(animateReel(strip, finalSymbol, delay));
       });
 
