@@ -5,10 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Slot Machine Lets Go Gambling</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bungee&family=Bungee+Shade&display=swap');
+
+    * { box-sizing: border-box; }
+
     body {
-      background: #181818;
+      background: #0f0f0f;
+      background-image: radial-gradient(ellipse at 50% 0%, #2a1a00 0%, #0f0f0f 65%);
       color: #fff;
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Bungee', 'Segoe UI', Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -16,126 +21,270 @@
       min-height: 100vh;
       margin: 0;
     }
+
     h1 {
-      margin-bottom: 20px;
+      font-family: 'Bungee Shade', cursive;
+      font-size: 2.4rem;
+      letter-spacing: 2px;
+      color: #ffcc33;
+      text-shadow: 0 0 24px #ffb34780, 0 2px 0 #a06000;
+      margin-bottom: 28px;
     }
+
     .slot-machine {
       display: grid;
       grid-template-rows: repeat(3, 100px);
       grid-template-columns: repeat(4, 100px);
       gap: 10px;
-      margin-bottom: 30px;
-      background: #222;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px #000a;
+      background: linear-gradient(160deg, #2a2a2a, #111);
+      border-radius: 20px;
+      box-shadow: 0 8px 40px #000c, inset 0 1px 0 #ffffff18;
       padding: 20px;
+      border: 2px solid #3a3a3a;
+      margin-bottom: 30px;
     }
+
+    /* Each slot is now a clipping window */
     .slot {
       width: 100px;
       height: 100px;
-      background: #333;
+      background: #1c1c1c;
       border-radius: 12px;
+      overflow: hidden;           /* ← clips symbols outside the square */
+      position: relative;
+      box-shadow: inset 0 2px 8px #0009, 0 1px 0 #ffffff10;
+      border: 1.5px solid #444;
+    }
+
+    /* The strip scrolls downward inside the slot */
+    .slot-strip {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      will-change: transform;
+    }
+
+    .slot-symbol {
+      width: 100px;
+      height: 100px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.5rem;
-      box-shadow: 0 2px 8px #0005;
-      transition: transform 0.3s cubic-bezier(.68,-0.55,.27,1.55);
-      will-change: transform;
-      user-select: none;
+      font-size: 2.6rem;
+      flex-shrink: 0;
     }
-    .slot.spin {
-      animation: spin-down 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+
+    /* Subtle top/bottom fade to reinforce the window feel */
+    .slot::before,
+    .slot::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      height: 28px;
+      z-index: 2;
+      pointer-events: none;
     }
-    @keyframes spin-down {
-      0% { transform: scale(1) translateY(0); }
-      40% { transform: scale(1.2) translateY(60px); }
-      70% { transform: scale(0.9) translateY(80px); }
-      100% { transform: scale(1) translateY(0); }
+    .slot::before {
+      top: 0;
+      background: linear-gradient(to bottom, #1c1c1cee, transparent);
     }
+    .slot::after {
+      bottom: 0;
+      background: linear-gradient(to top, #1c1c1cee, transparent);
+    }
+
     .spin-btn {
       background: linear-gradient(90deg, #ffb347, #ffcc33);
-      color: #222;
+      color: #1a0e00;
       border: none;
-      border-radius: 8px;
-      padding: 14px 40px;
+      border-radius: 10px;
+      padding: 14px 48px;
       font-size: 1.2rem;
+      font-family: 'Bungee', sans-serif;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 2px 8px #0005;
-      transition: background 0.2s;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 18px #ffb34755, 0 1px 0 #fff4 inset;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .spin-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px #ffb34788;
     }
     .spin-btn:active {
-      background: linear-gradient(90deg, #ffcc33, #ffb347);
+      transform: translateY(1px);
+      box-shadow: 0 2px 8px #ffb34744;
+    }
+    .spin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #winMsg {
+      margin-top: 18px;
+      font-size: 1.5rem;
+      color: #ffcc33;
+      text-shadow: 0 0 16px #ffb347;
+      min-height: 2rem;
+      letter-spacing: 1px;
+      animation: pop 0.4s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <h1>Animated Slot Machine</h1>
+  <h1>🎰 Slot Machine</h1>
   <div class="slot-machine" id="slotMachine"></div>
-  <button class="spin-btn" id="spinBtn">Spin</button>
+  <button class="spin-btn" id="spinBtn">SPIN</button>
+  <div id="winMsg"></div>
+
   <script>
-// 24 emoji images for demonstration (replace with your own images if desired)
-const IMAGES = [
-  '🍒','🍋','🍉','🍇','🍓','🍊','🍌','🍍',
-  '🥝','🥥','🥭','🍏','🍎','🍐','🍑','🍈',
-  '🍔','🍕','🍩','🍪','🍫','🍿','🍦','🍭'
-];
+    const IMAGES = [
+      '🍒','🍋','🍉','🍇','🍓','🍊','🍌','🍍',
+      '🥝','🥥','🥭','🍏','🍎','🍐','🍑','🍈',
+      '🍔','🍕','🍩','🍪','🍫','🍿','🍦','🍭'
+    ];
 
-const ROWS = 3;
-const COLS = 4;
-const slotMachine = document.getElementById('slotMachine');
-const spinBtn = document.getElementById('spinBtn');
+    const ROWS = 3;
+    const COLS = 4;
+    const ITEM_H = 100;        // must match .slot height in px
+    const SPIN_SYMBOLS = 18;   // how many symbols scroll before landing
 
-// Create slots
-document.addEventListener('DOMContentLoaded', () => {
-  for (let i = 0; i < ROWS * COLS; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'slot';
-    slot.textContent = IMAGES[Math.floor(Math.random() * IMAGES.length)];
-    slotMachine.appendChild(slot);
-  }
-});
+    const slotMachine = document.getElementById('slotMachine');
+    const spinBtn = document.getElementById('spinBtn');
+    const winMsg = document.getElementById('winMsg');
 
-function spinSlots() {
-  const slots = document.querySelectorAll('.slot');
-  let results = [];
-  slots.forEach((slot, i) => {
-    slot.classList.remove('spin');
-    setTimeout(() => {
-      slot.classList.add('spin');
-      setTimeout(() => {
-        const img = IMAGES[Math.floor(Math.random() * IMAGES.length)];
-        slot.textContent = img;
-        results[i] = img;
-      }, 350);
-      setTimeout(() => {
-        slot.classList.remove('spin');
-        // After last slot, check results
-        if (i === slots.length - 1) {
-          setTimeout(() => checkWin(results), 100);
-        }
-      }, 700);
-    }, i * 80);
-  });
-}
+    // Store the current face value for each cell
+    const currentValues = [];
 
-function checkWin(results) {
-  // Example: check if any row has all the same image
-  let win = false;
-  for (let r = 0; r < ROWS; r++) {
-    const row = results.slice(r * COLS, (r + 1) * COLS);
-    if (row.every((img) => img === row[0])) {
-      win = true;
-      break;
+    // Build the grid
+    for (let i = 0; i < ROWS * COLS; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'slot';
+
+      const strip = document.createElement('div');
+      strip.className = 'slot-strip';
+
+      const sym = IMAGES[Math.floor(Math.random() * IMAGES.length)];
+      currentValues[i] = sym;
+
+      const face = document.createElement('div');
+      face.className = 'slot-symbol';
+      face.textContent = sym;
+      strip.appendChild(face);
+
+      cell.appendChild(strip);
+      slotMachine.appendChild(cell);
     }
-  }
-  if (win) {
-    alert('🎉 You win! (Row match)');
-  }
-}
 
-spinBtn.addEventListener('click', spinSlots);
+    /**
+     * Animate a single reel strip downward, land on `finalSymbol`.
+     * Returns a Promise that resolves when animation finishes.
+     */
+    function animateReel(strip, finalSymbol, delay) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          // Build the full symbol list: random padding + final symbol at end
+          const symbolList = [];
+          for (let i = 0; i < SPIN_SYMBOLS; i++) {
+            symbolList.push(IMAGES[Math.floor(Math.random() * IMAGES.length)]);
+          }
+          symbolList.push(finalSymbol);
+
+          // Populate strip (clear first)
+          strip.innerHTML = '';
+          symbolList.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'slot-symbol';
+            div.textContent = s;
+            strip.appendChild(div);
+          });
+
+          // Start position: strip sits with first symbol visible (translateY = 0)
+          // Target: last symbol visible → translateY = -SPIN_SYMBOLS * ITEM_H
+          // Because we scroll DOWN, we actually go from a negative top offset
+          // toward 0, making it look like symbols fall downward.
+
+          const totalItems = symbolList.length;          // SPIN_SYMBOLS + 1
+          const startY = -(totalItems - 1) * ITEM_H;    // first symbol shown
+          const endY   = 0;                              // last symbol shown
+
+          strip.style.transform = `translateY(${startY}px)`;
+          strip.style.transition = 'none';
+
+          // Force reflow
+          strip.getBoundingClientRect();
+
+          // Fast initial speed with ease-out deceleration
+          const spinDuration = 900 + (delay / 80) * 120; // later reels take a bit longer
+
+          strip.style.transition = `transform ${spinDuration}ms cubic-bezier(0.15, 0.85, 0.35, 1.0)`;
+          strip.style.transform = `translateY(${endY}px)`;
+
+          setTimeout(() => {
+            // Clean strip to just the final symbol so it stays tidy
+            strip.innerHTML = '';
+            strip.style.transition = 'none';
+            strip.style.transform = 'translateY(0)';
+            const face = document.createElement('div');
+            face.className = 'slot-symbol';
+            face.textContent = finalSymbol;
+            strip.appendChild(face);
+            resolve(finalSymbol);
+          }, spinDuration + 50);
+
+        }, delay);
+      });
+    }
+
+    async function spinSlots() {
+      spinBtn.disabled = true;
+      winMsg.textContent = '';
+
+      const slots = slotMachine.querySelectorAll('.slot');
+      const promises = [];
+      const results = [];
+
+      slots.forEach((slot, i) => {
+        const strip = slot.querySelector('.slot-strip');
+        const finalSymbol = IMAGES[Math.floor(Math.random() * IMAGES.length)];
+        results[i] = finalSymbol;
+        const delay = i * 80;
+        promises.push(animateReel(strip, finalSymbol, delay));
+      });
+
+      await Promise.all(promises);
+
+      // Update stored values
+      results.forEach((v, i) => currentValues[i] = v);
+
+      checkWin(results);
+      spinBtn.disabled = false;
+    }
+
+    function checkWin(results) {
+      let win = false;
+      for (let r = 0; r < ROWS; r++) {
+        const row = results.slice(r * COLS, (r + 1) * COLS);
+        if (row.every(img => img === row[0])) {
+          win = true;
+          break;
+        }
+      }
+      if (win) {
+        winMsg.textContent = '🎉 YOU WIN! ROW MATCH!';
+      }
+    }
+
+    spinBtn.addEventListener('click', spinSlots);
   </script>
 </body>
 </html>
