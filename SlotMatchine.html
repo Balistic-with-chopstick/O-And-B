@@ -354,19 +354,21 @@
       to   { transform: rotate(360deg); }
     }
 
-    /* ── Coin particle explosion ── */
+    /* ── Coin rain effect ── */
     .coin-particle {
       position: fixed;
-      font-size: 2.8rem;
+      font-size: 3.4rem;
       pointer-events: none;
       z-index: 200;
       will-change: transform, opacity;
-      animation: coinFly var(--dur) cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+      animation: coinFall var(--dur) cubic-bezier(0.4, 0, 0.8, 1) forwards;
+      top: -80px;
     }
-    @keyframes coinFly {
-      0%   { transform: translate(0, 0) rotate(0deg) scale(1);   opacity: 1; }
-      70%  { opacity: 1; }
-      100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.4); opacity: 0; }
+    @keyframes coinFall {
+      0%   { transform: translateX(var(--sway-start)) translateY(0)       rotate(0deg)           scale(1);   opacity: 1; }
+      60%  { opacity: 1; }
+      80%  { transform: translateX(var(--sway-end))   translateY(var(--fall-dist)) rotate(var(--rot)) scale(0.95); opacity: 0.9; }
+      100% { transform: translateX(var(--sway-end))   translateY(calc(var(--fall-dist) + 60px)) rotate(var(--rot)) scale(0.5); opacity: 0; }
     }
 
     /* Legend */
@@ -422,7 +424,78 @@
     }
     .money-value.pop { animation: moneyPop 0.35s ease-out; }
 
-    /* ── Return button ── */
+    /* ── Insert Coin system ── */
+    body.coin-mode { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='%23FFD700' stroke='%23B8860B' stroke-width='2'/%3E%3Ccircle cx='20' cy='20' r='13' fill='none' stroke='%23B8860B' stroke-width='1.5'/%3E%3Ctext x='20' y='26' text-anchor='middle' font-size='14' font-family='serif' font-weight='bold' fill='%23B8860B'%3E%24%3C/text%3E%3C/svg%3E") 20 20, crosshair; }
+
+    #insertCoinBox {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    #insertCoinSlot {
+      width: 220px;
+      height: 52px;
+      background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+      border: 2px dashed #444;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: #555;
+      letter-spacing: 1px;
+      transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+      cursor: default !important;
+    }
+    #insertCoinSlot.ready {
+      border-color: #ffcc33;
+      color: #ffcc33;
+      box-shadow: 0 0 16px #ffcc3333;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='%23FFD700' stroke='%23B8860B' stroke-width='2'/%3E%3Ccircle cx='20' cy='20' r='13' fill='none' stroke='%23B8860B' stroke-width='1.5'/%3E%3Ctext x='20' y='26' text-anchor='middle' font-size='14' font-family='serif' font-weight='bold' fill='%23B8860B'%3E%24%3C/text%3E%3C/svg%3E") 20 20, pointer !important;
+    }
+    #insertCoinSlot.ready:hover {
+      box-shadow: 0 0 28px #ffcc3366;
+    }
+    #insertCoinSlot.has-coin {
+      border-style: solid;
+      border-color: #ffcc33;
+      color: #ffcc33;
+      box-shadow: 0 0 20px #ffcc3344;
+    }
+    #insertCoinSlot.has-coin .coin-in-slot {
+      animation: coinBob 0.8s ease-in-out infinite alternate;
+    }
+    @keyframes coinBob {
+      from { transform: translateY(-2px); }
+      to   { transform: translateY(2px); }
+    }
+    .coin-in-slot { font-size: 1.6rem; }
+    #coinSlotLabel { font-size: 0.48rem; color: #444; letter-spacing: 2px; }
+    #coinHint { font-size: 0.55rem; color: #555; letter-spacing: 1px; }
+
+    /* money value clickable in coin mode */
+    #moneyValue {
+      cursor: pointer;
+      transition: text-shadow 0.2s, color 0.2s;
+    }
+    #moneyValue:hover {
+      color: #ffcc33 !important;
+      text-shadow: 0 0 18px #ffcc3388;
+    }
+    #moneyValue.coin-pickable {
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='%23FFD700' stroke='%23B8860B' stroke-width='2'/%3E%3Ccircle cx='20' cy='20' r='13' fill='none' stroke='%23B8860B' stroke-width='1.5'/%3E%3Ctext x='20' y='26' text-anchor='middle' font-size='14' font-family='serif' font-weight='bold' fill='%23B8860B'%3E%24%3C/text%3E%3C/svg%3E") 20 20, crosshair;
+      text-shadow: 0 0 16px #ffcc33, 0 0 32px #ffcc3388;
+      animation: moneyGlow 0.7s ease-in-out infinite alternate;
+    }
+    @keyframes moneyGlow {
+      from { text-shadow: 0 0 8px #ffcc3388; }
+      to   { text-shadow: 0 0 24px #ffcc33, 0 0 48px #ffcc3366; }
+    }
     #returnBtn {
       display: inline-block;
       margin-top: 20px;
@@ -712,6 +785,15 @@
     </div>
   </div>
 
+  <!-- Insert Coin -->
+  <div id="insertCoinBox">
+    <div id="insertCoinSlot">
+      <span class="coin-in-slot" id="coinInSlot" style="display:none">🪙</span>
+      <span id="coinSlotText">INSERT COIN</span>
+    </div>
+    <span id="coinHint">Click your balance to pick up a coin</span>
+  </div>
+
   <div id="winMsg"></div>
 
   <a id="returnBtn" href="https://balistic-with-chopstick.github.io/O-And-B/index.html">
@@ -781,7 +863,7 @@
       moneyValue.textContent = '💰 ' + (isNeg ? '-' : '') + '$' + Math.abs(balance);
       if (pop) {
         moneyValue.classList.remove('pop');
-        void moneyValue.offsetWidth; // reflow to restart animation
+        void moneyValue.offsetWidth;
         moneyValue.classList.add('pop');
       }
     }
@@ -798,6 +880,46 @@
 
     updateMoneyDisplay();
 
+    // ── Insert Coin system ────────────────────────────────────────
+    const insertCoinSlot = document.getElementById('insertCoinSlot');
+    const coinInSlot     = document.getElementById('coinInSlot');
+    const coinSlotText   = document.getElementById('coinSlotText');
+    const coinHint       = document.getElementById('coinHint');
+
+    let coinPickedUp  = false;
+    let coinInserted  = false;
+
+    function setCoinState() {
+      insertCoinSlot.classList.toggle('ready',    coinPickedUp && !coinInserted);
+      insertCoinSlot.classList.toggle('has-coin', coinInserted);
+      coinInSlot.style.display  = coinInserted ? 'inline' : 'none';
+      coinSlotText.textContent  = coinInserted ? 'COIN INSERTED — PULL TO SPIN'
+                                : coinPickedUp ? 'DROP COIN HERE'
+                                : 'INSERT COIN';
+      coinHint.textContent = coinInserted
+        ? 'Coin deducted — spin away!'
+        : coinPickedUp
+        ? 'Now click the slot to insert your coin'
+        : 'Click your balance to pick up a coin';
+
+      // Toggle coin cursor on money value
+      moneyValue.classList.toggle('coin-pickable', coinPickedUp && !coinInserted);
+      // Toggle coin cursor on body so everything shows coin cursor when carrying
+      document.body.classList.toggle('coin-mode', coinPickedUp && !coinInserted);
+
+      if (!coinInserted) {
+        leverHousing.classList.add('disabled');
+      } else {
+        if (!spinning) leverHousing.classList.remove('disabled');
+      }
+    }
+
+    function resetCoinSlot() {
+      coinPickedUp = false;
+      coinInserted = false;
+      setCoinState();
+    }
+
     // Lever rotation: negative rotateX tips the ball TOWARD viewer (pull down = forward arc)
     // Pivot is at center of housing, ball swings forward from top
     const LEVER_MIN_DEG  = 0;    // upright resting
@@ -808,6 +930,27 @@
     let isDragging  = false;
     let spinning    = false;
     const DEG_PER_PX = 0.40;
+
+    // ── Coin event listeners (need spinning + leverHousing in scope) ──
+    moneyValue.addEventListener('click', () => {
+      if (coinInserted || coinPickedUp || spinning) return;
+      balance -= SPIN_COST;
+      updateMoneyDisplay(true);
+      coinPickedUp = true;
+      setCoinState();
+    });
+
+    insertCoinSlot.addEventListener('click', () => {
+      if (!coinPickedUp || coinInserted) return;
+      coinPickedUp = false;
+      coinInserted = true;
+      setCoinState();
+      insertCoinSlot.style.transform = 'scale(1.06)';
+      setTimeout(() => insertCoinSlot.style.transform = '', 200);
+    });
+
+    // Init — lock lever until coin inserted
+    setCoinState();
 
     const irsOverlay = document.getElementById('irsOverlay');
     const irsDebt    = document.getElementById('irsDebt');
@@ -1145,44 +1288,42 @@
       launchCoins();
     }
 
-    // ── Coin explosion ────────────────────────────────────────────
+    // ── Coin rain from sky ────────────────────────────────────────
     function launchCoins() {
       const coinEmojis = ['🪙','💰','💵','✨','⭐','💛'];
-      const count = 90;
-      const cx = window.innerWidth  / 2;
-      const cy = window.innerHeight / 2;
+      const totalCoins = 55;
+      const screenW    = window.innerWidth;
+      const screenH    = window.innerHeight;
 
-      // Fire multiple bursts with slight delays for a shower effect
-      [0, 120, 280, 460, 680].forEach(burstDelay => {
+      for (let i = 0; i < totalCoins; i++) {
+        // Stagger each coin's start time for a continuous rain feel
+        const delay = Math.random() * 1800;
+
         setTimeout(() => {
-          const burstCount = Math.floor(count / 5);
-          for (let i = 0; i < burstCount; i++) {
-            const el = document.createElement('div');
-            el.className = 'coin-particle';
-            el.textContent = coinEmojis[Math.floor(Math.random() * coinEmojis.length)];
+          const el = document.createElement('div');
+          el.className = 'coin-particle';
+          el.textContent = coinEmojis[Math.floor(Math.random() * coinEmojis.length)];
 
-            // Random angle and distance
-            const angle  = Math.random() * Math.PI * 2;
-            const dist   = 260 + Math.random() * 480;
-            const tx     = Math.cos(angle) * dist;
-            const ty     = Math.sin(angle) * dist - 120;
-            const rot    = (Math.random() - 0.5) * 720;
-            const dur    = (0.8 + Math.random() * 1.0).toFixed(2);
+          // Random horizontal start position across full screen width
+          const startX   = Math.random() * screenW;
+          // Slight horizontal sway as it falls
+          const swayAmt  = (Math.random() - 0.5) * 120;
+          const fallDist = screenH + 120; // fall past bottom of screen
+          const rot      = (Math.random() - 0.5) * 540;
+          const dur      = (1.4 + Math.random() * 1.2).toFixed(2);
 
-            el.style.setProperty('--tx',  tx + 'px');
-            el.style.setProperty('--ty',  ty + 'px');
-            el.style.setProperty('--rot', rot + 'deg');
-            el.style.setProperty('--dur', dur + 's');
-            el.style.left = cx + 'px';
-            el.style.top  = cy + 'px';
-            el.style.marginLeft = '-1.4rem';
-            el.style.marginTop  = '-1.4rem';
+          el.style.setProperty('--sway-start', '0px');
+          el.style.setProperty('--sway-end',   swayAmt + 'px');
+          el.style.setProperty('--fall-dist',  fallDist + 'px');
+          el.style.setProperty('--rot',        rot + 'deg');
+          el.style.setProperty('--dur',        dur + 's');
+          el.style.left        = startX + 'px';
+          el.style.marginLeft  = '-1.7rem';
 
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), (parseFloat(dur) * 1000) + 100);
-          }
-        }, burstDelay);
-      });
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), (parseFloat(dur) * 1000) + 100);
+        }, delay);
+      }
     }
 
     // ── Staged FAKE jackpot reveal ────────────────────────────────
@@ -1386,9 +1527,9 @@
 
     // ── Main spin ─────────────────────────────────────────────────
     async function spinSlots() {
-      if (spinning) return;
+      if (spinning || !coinInserted) return;
       spinning = true;
-      chargeSpin();
+      // Cost already paid when coin was inserted — just lock lever
       leverHousing.classList.add('disabled');
       winMsg.innerHTML = '';
       tagDelay = 0;
@@ -1472,7 +1613,8 @@
       }
 
       spinning = false;
-      leverHousing.classList.remove('disabled');
+      // Spin done — reset coin slot, user must insert another coin to spin again
+      resetCoinSlot();
     }
 
     function setLeverDeg(deg, cls = null) {
@@ -1492,7 +1634,7 @@
     leverArm.addEventListener('touchstart', startDrag, { passive: true });
 
     function startDrag(e) {
-      if (spinning) return;
+      if (spinning || !coinInserted) return;
       isDragging = true;
       // currentDeg is negative, so divide by -DEG_PER_PX to get positive px offset
       dragStartY = getClientY(e) + currentDeg / DEG_PER_PX;
