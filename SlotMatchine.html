@@ -354,6 +354,21 @@
       to   { transform: rotate(360deg); }
     }
 
+    /* ── Coin particle explosion ── */
+    .coin-particle {
+      position: fixed;
+      font-size: 2.8rem;
+      pointer-events: none;
+      z-index: 200;
+      will-change: transform, opacity;
+      animation: coinFly var(--dur) cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+    }
+    @keyframes coinFly {
+      0%   { transform: translate(0, 0) rotate(0deg) scale(1);   opacity: 1; }
+      70%  { opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.4); opacity: 0; }
+    }
+
     /* Legend */
     #legend {
       display: flex;
@@ -364,17 +379,323 @@
       flex-wrap: wrap;
       justify-content: center;
     }
+
+    /* ── Money counter ── */
+    #moneyDisplay {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, #1a1a1a, #111);
+      border: 1.5px solid #3a3a3a;
+      border-radius: 12px;
+      padding: 8px 22px;
+      box-shadow: 0 4px 16px #000a, inset 0 1px 0 #ffffff0a;
+    }
+    .money-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .money-label {
+      font-size: 0.5rem;
+      letter-spacing: 2px;
+      color: #888;
+    }
+    .money-value {
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+      transition: color 0.3s;
+    }
+    .money-value.positive { color: #ffcc33; text-shadow: 0 0 10px #ffcc3366; }
+    .money-value.negative { color: #ff4444; text-shadow: 0 0 10px #ff444466; }
+    .money-divider {
+      width: 1px;
+      height: 36px;
+      background: #333;
+    }
+    @keyframes moneyPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    .money-value.pop { animation: moneyPop 0.35s ease-out; }
+
+    /* ── Return button ── */
+    #returnBtn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 24px;
+      background: linear-gradient(135deg, #1a1a1a, #111);
+      border: 1.5px solid #3a3a3a;
+      border-radius: 10px;
+      color: #888;
+      font-family: 'Bungee', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px #000a;
+    }
+    #returnBtn:hover {
+      border-color: #ffcc33;
+      color: #ffcc33;
+      box-shadow: 0 0 14px #ffcc3333;
+    }
+
+    /* ── IRS / Curse overlay ── */
+    #irsOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000000ee;
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 14px;
+    }
+    #irsOverlay.active { display: flex; }
+    #irsTitle {
+      font-family: 'Bungee Shade', cursive;
+      font-size: 3.8rem;
+      color: #ff2222;
+      text-shadow: 0 0 40px #ff0000, 0 0 80px #ff000077, 0 4px 0 #600000;
+      letter-spacing: 4px;
+      animation: jackpotBounce 0.6s ease-in-out infinite alternate;
+      text-align: center;
+    }
+    #irsEmoji  { font-size: 4rem; animation: spinEmoji 1.2s linear infinite; }
+    #irsSub    { font-size: 1rem; color: #ff888888; letter-spacing: 2px; text-align: center; max-width: 360px; line-height: 1.6; }
+    #irsClose  {
+      margin-top: 10px;
+      background: #ff2222;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 40px;
+      font-family: 'Bungee', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 20px #ff000066;
+      transition: transform 0.1s;
+    }
+    #irsClose:hover { transform: scale(1.05); }
+    #irsDebt {
+      font-size: 1.4rem;
+      color: #ff4444;
+      font-family: 'Bungee', sans-serif;
+    }
+
+    /* curse highlight on slot */
+    .slot.curse {
+      border-color: #ff2222;
+      box-shadow: 0 0 22px #ff0000aa, inset 0 0 14px #ff000033;
+      animation: pulse-curse 0.6s ease-in-out infinite;
+    }
+    @keyframes pulse-curse { 0%,100%{box-shadow:0 0 14px #ff000088} 50%{box-shadow:0 0 36px #ff2222ee} }
+    #payoutBtn {
+      background: linear-gradient(135deg, #1a1a1a, #111);
+      border: 1.5px solid #3a3a3a;
+      border-radius: 12px;
+      padding: 8px 18px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      box-shadow: 0 4px 16px #000a;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #payoutBtn:hover {
+      border-color: #ffcc33;
+      box-shadow: 0 0 14px #ffcc3344;
+    }
+    #payoutBtn .btn-label { font-size: 0.5rem; letter-spacing: 2px; color: #888; }
+    #payoutBtn .btn-text  { font-size: 1rem; color: #ffcc33; letter-spacing: 1px; }
+
+    /* ── Payout modal ── */
+    #payoutModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000000cc;
+      z-index: 150;
+      align-items: center;
+      justify-content: center;
+    }
+    #payoutModal.active { display: flex; }
+    #payoutPanel {
+      background: linear-gradient(160deg, #1e1e1e, #111);
+      border: 2px solid #3a3a3a;
+      border-radius: 20px;
+      padding: 28px 32px;
+      max-width: 420px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 12px 48px #000c;
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: #3a3a3a #111;
+    }
+    #payoutPanel::-webkit-scrollbar { width: 6px; }
+    #payoutPanel::-webkit-scrollbar-track { background: #111; border-radius: 3px; }
+    #payoutPanel::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
+    #payoutPanel::-webkit-scrollbar-thumb:hover { background: #555; }
+    #payoutPanel h2 {
+      font-family: 'Bungee Shade', cursive;
+      color: #ffcc33;
+      font-size: 1.6rem;
+      text-align: center;
+      margin: 0 0 20px 0;
+      text-shadow: 0 0 16px #ffcc3355;
+    }
+    .payout-section-title {
+      font-size: 0.55rem;
+      letter-spacing: 3px;
+      color: #666;
+      margin: 16px 0 8px 0;
+    }
+    .payout-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      background: #ffffff06;
+    }
+    .payout-row:hover { background: #ffffff0e; }
+    .payout-name { font-size: 0.8rem; color: #ccc; }
+    .payout-name span { margin-right: 6px; }
+    .payout-amt  { font-size: 0.9rem; font-weight: bold; }
+    .payout-chance { font-size: 0.65rem; color: #555; margin-left: 8px; white-space: nowrap; }
+    .payout-right { display: flex; align-items: center; gap: 0; }
+    .amt-green   { color: #39ff14; }
+    .amt-blue    { color: #00e5ff; }
+    .amt-orange  { color: #ff8c00; }
+    .amt-pink    { color: #ff4cf5; }
+    .amt-gold    { color: #ffd700; text-shadow: 0 0 8px #ffd70066; }
+    .amt-yellow  { color: #ffcc33; }
+    #payoutClose {
+      position: absolute;
+      top: 12px; right: 16px;
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+    #payoutClose:hover { color: #fff; }
+    .payout-divider {
+      height: 1px;
+      background: #2a2a2a;
+      margin: 12px 0;
+    }
   </style>
 </head>
 <body>
   <h1>🎰 Slot Machine</h1>
 
-  <div id="legend">
-    <span class="tag tag-3col">3 DOWN</span>
-    <span class="tag tag-3row">3 IN A ROW</span>
-    <span class="tag tag-4row">4 IN A ROW</span>
-    <span class="tag tag-diag">DIAGONAL</span>
-    <span class="tag tag-jackpot">✨ JACKPOT</span>
+  <div id="moneyDisplay">
+    <div class="money-item">
+      <span class="money-label">BALANCE</span>
+      <span class="money-value positive" id="moneyValue">💰 $50</span>
+    </div>
+    <div class="money-divider"></div>
+    <div class="money-item">
+      <span class="money-label">COST PER SPIN</span>
+      <span class="money-value" style="color:#888;font-size:1rem">$10</span>
+    </div>
+    <div class="money-divider"></div>
+    <button id="payoutBtn">
+      <span class="btn-label">VIEW</span>
+      <span class="btn-text">PAYOUT</span>
+    </button>
+  </div>
+
+  <!-- Payout modal -->
+  <div id="payoutModal">
+    <div id="payoutPanel">
+      <button id="payoutClose">✕</button>
+      <h2>💰 Payouts</h2>
+
+      <div class="payout-section-title">SINGLES</div>
+      <div class="payout-row">
+        <span class="payout-name"><span>🟠</span>3 Down</span>
+        <span class="payout-right"><span class="payout-amt amt-orange">+$3</span><span class="payout-chance">20% per col</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>🔵</span>3 In A Row</span>
+        <span class="payout-right"><span class="payout-amt amt-blue">+$3</span><span class="payout-chance">18% per row</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>🟢</span>Diagonal</span>
+        <span class="payout-right"><span class="payout-amt amt-green">+$3</span><span class="payout-chance">12% per diag</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>💜</span>4 In A Row</span>
+        <span class="payout-right"><span class="payout-amt amt-pink">+$5</span><span class="payout-chance">10% per row</span></span>
+      </div>
+
+      <div class="payout-divider"></div>
+      <div class="payout-section-title">COMBOS</div>
+      <div class="payout-row">
+        <span class="payout-name"><span>🟠🟠</span>Two 3 Downs</span>
+        <span class="payout-right"><span class="payout-amt amt-orange">+$6</span><span class="payout-chance">~10% chance</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>🔵🔵</span>Two 3 In A Rows</span>
+        <span class="payout-right"><span class="payout-amt amt-blue">+$6</span><span class="payout-chance">~9% chance</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>🟢🟢</span>Two Diagonals</span>
+        <span class="payout-right"><span class="payout-amt amt-green">+$6</span><span class="payout-chance">~7% chance</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>🎯</span>Any Two 3-Slot Combos</span>
+        <span class="payout-right"><span class="payout-amt amt-yellow">+$6</span><span class="payout-chance">~11% chance</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>🔗</span>Any 3-Slot + 4 In A Row</span>
+        <span class="payout-right"><span class="payout-amt amt-yellow">+$6</span><span class="payout-chance">~8% chance</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>💜💜</span>Two 4 In A Rows</span>
+        <span class="payout-right"><span class="payout-amt amt-pink">+$10</span><span class="payout-chance">~6.4% chance</span></span>
+      </div>
+
+      <div class="payout-divider"></div>
+      <div class="payout-section-title">SPECIALS</div>
+      <div class="payout-row">
+        <span class="payout-name"><span>⚠️</span>Fake Jackpot</span>
+        <span class="payout-right"><span class="payout-amt amt-yellow">+$125</span><span class="payout-chance">8% chance</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>✨</span>Jackpot — All 12 Match</span>
+        <span class="payout-right"><span class="payout-amt amt-gold">+$250</span><span class="payout-chance">5.5% chance</span></span>
+      </div>
+
+      <div class="payout-divider"></div>
+      <div class="payout-section-title">CURSES 💀</div>
+      <div class="payout-row">
+        <span class="payout-name"><span>6️⃣</span>One 6 in a column</span>
+        <span class="payout-right"><span class="payout-amt" style="color:#ff4444">-$125</span><span class="payout-chance">10% chance</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>6️⃣6️⃣</span>Two 6's in a column</span>
+        <span class="payout-right"><span class="payout-amt" style="color:#ff2222">-$250</span><span class="payout-chance">5% chance</span></span>
+      </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>6️⃣6️⃣6️⃣</span>Three 6's in a column</span>
+        <span class="payout-right"><span class="payout-amt" style="color:#ff0000">Balance → $0</span><span class="payout-chance">1.5% chance</span></span>
+      </div>
+    </div>
   </div>
 
   <div class="machine-wrap">
@@ -393,12 +714,25 @@
 
   <div id="winMsg"></div>
 
+  <a id="returnBtn" href="https://balistic-with-chopstick.github.io/O-And-B/index.html">
+    ← Return To Main Site
+  </a>
+
   <!-- Jackpot overlay -->
   <div id="jackpotOverlay">
     <div id="jackpotText">JACKPOT!</div>
     <div id="jackpotBigEmoji">🌟</div>
     <div id="jackpotSub">ALL 12 MATCH!</div>
     <button id="jackpotClose">✨ COLLECT ✨</button>
+  </div>
+
+  <!-- IRS / Curse overlay -->
+  <div id="irsOverlay">
+    <div id="irsTitle">YOUR LUCK SUCKS!</div>
+    <div id="irsEmoji">🏛️</div>
+    <div id="irsSub">The IRS came for you because you had no money to pay your taxes.</div>
+    <div id="irsDebt"></div>
+    <button id="irsClose">😭 OKAY FINE 😭</button>
   </div>
 
   <script>
@@ -411,12 +745,15 @@
     const ROWS = 3, COLS = 4, ITEM_H = 100, SPIN_SYMBOLS = 18;
 
     // Each combo rolls independently — multiple can fire in one spin!
-    const P_JACKPOT      = 0.02;   // 2%  – very rare
+    const P_JACKPOT      = 0.055;  // 5.5% – ~1 in 18 spins
     const P_FAKE_JACKPOT = 0.08;   // 8%  – fake jackpot (3 cols match, 1 random)
-    const P_4ROW    = 0.06;   // 6%  per row
-    const P_DIAG    = 0.08;   // 8%  per diagonal
+    const P_4ROW    = 0.10;   // 10% per row
+    const P_DIAG    = 0.12;   // 12% per diagonal
     const P_3ROW    = 0.18;   // 18% per row  → usually only 1 row fires
     const P_3COL    = 0.20;   // 20% per col  → usually only 1 col fires
+    const P_CURSE1  = 0.10;   // 10% – one 6 in a column  (-$125)
+    const P_CURSE2  = 0.05;   // 5%  – two 6's in a column (-$250)
+    const P_CURSE3  = 0.015;  // 1.5% – three 6's → balance to $0 (or IRS)
 
     const slotMachine    = document.getElementById('slotMachine');
     const winMsg         = document.getElementById('winMsg');
@@ -426,6 +763,40 @@
     const leverHousing   = document.getElementById('leverHousing');
     const leverArm       = document.getElementById('leverArm');
     const leverBall      = document.getElementById('leverBall');
+    const moneyValue     = document.getElementById('moneyValue');
+
+    // ── Money system ──────────────────────────────────────────────
+    let balance = 50; // starting balance
+    const SPIN_COST   = 10;
+    const PAY_3COL    = 3;
+    const PAY_3ROW    = 3;
+    const PAY_DIAG    = 3;
+    const PAY_4ROW         = 5;
+    const PAY_JACKPOT      = 250;
+    const PAY_FAKE_JACKPOT = 125;
+
+    function updateMoneyDisplay(pop = false) {
+      const isNeg = balance < 0;
+      moneyValue.className = 'money-value ' + (isNeg ? 'negative' : 'positive');
+      moneyValue.textContent = '💰 ' + (isNeg ? '-' : '') + '$' + Math.abs(balance);
+      if (pop) {
+        moneyValue.classList.remove('pop');
+        void moneyValue.offsetWidth; // reflow to restart animation
+        moneyValue.classList.add('pop');
+      }
+    }
+
+    function awardMoney(amount) {
+      balance += amount;
+      updateMoneyDisplay(true);
+    }
+
+    function chargeSpin() {
+      balance -= SPIN_COST;
+      updateMoneyDisplay(true);
+    }
+
+    updateMoneyDisplay();
 
     // Lever rotation: negative rotateX tips the ball TOWARD viewer (pull down = forward arc)
     // Pivot is at center of housing, ball swings forward from top
@@ -438,8 +809,24 @@
     let spinning    = false;
     const DEG_PER_PX = 0.40;
 
+    const irsOverlay = document.getElementById('irsOverlay');
+    const irsDebt    = document.getElementById('irsDebt');
+
     document.getElementById('jackpotClose').addEventListener('click', () => {
       jackpotOverlay.classList.remove('active');
+    });
+    document.getElementById('irsClose').addEventListener('click', () => {
+      irsOverlay.classList.remove('active');
+    });
+    document.getElementById('payoutBtn').addEventListener('click', () => {
+      document.getElementById('payoutModal').classList.add('active');
+    });
+    document.getElementById('payoutClose').addEventListener('click', () => {
+      document.getElementById('payoutModal').classList.remove('active');
+    });
+    document.getElementById('payoutModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('payoutModal'))
+        document.getElementById('payoutModal').classList.remove('active');
     });
 
     // ── Build grid ────────────────────────────────────────────────
@@ -467,21 +854,39 @@
     const flatIdx = (r, c) => r * COLS + c;
     const sleep = ms => new Promise(res => setTimeout(res, ms));
 
+    // ── Spin counter — forces a blank result every ~10 spins ─────
+    let spinCount = 0;
+    const BLANK_SPIN_INTERVAL = 10;
+
+    // Builds a fully random grid guaranteed to have no wins, no 6's
+    function buildBlankResult() {
+      let flat;
+      let attempts = 0;
+      do {
+        flat = Array.from({ length: ROWS * COLS }, pick);
+        attempts++;
+        // Safety valve after 200 tries
+        if (attempts > 200) break;
+      } while (hasAnyWin(flat) || flat.includes('6️⃣'));
+      return { type: 'blank', flat, curseCol: null };
+    }
+
+    // Quick check: does this flat grid have any win or 6?
+    function hasAnyWin(flat) {
+      if (flat.includes('6️⃣')) return true;
+      const { allWin } = detectPatterns(flat);
+      return allWin.size > 0;
+    }
+
     // ── Fake jackpot builder ──────────────────────────────────────
-    // 3 columns all share one emoji, the 4th column is random
-    // The "odd" column can accidentally match the jackpot sym → 4-in-a-row is legit
+    // First 3 columns all share one emoji, the 4th (rightmost) column is random
     function buildFakeJackpot() {
       const sym = pick();
-      const oddCol = Math.floor(rand() * COLS); // which column is the odd one out
+      const oddCol = 3; // always the last column
       const flat = [];
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          if (c === oddCol) {
-            // Random symbol — may or may not match sym
-            flat.push(pick());
-          } else {
-            flat.push(sym);
-          }
+          flat.push(c === oddCol ? pick() : sym);
         }
       }
       return flat;
@@ -490,6 +895,13 @@
     // ── Multi-combo result builder ────────────────────────────────
     // Each combo rolls INDEPENDENTLY — many can stack in one spin!
     function buildResults() {
+      spinCount++;
+
+      // Every ~10 spins, force a completely blank result
+      if (spinCount % BLANK_SPIN_INTERVAL === 0) {
+        return buildBlankResult();
+      }
+
       // Jackpot first (overrides everything)
       if (rand() < P_JACKPOT) {
         const sym = pick();
@@ -501,7 +913,33 @@
         return { type: 'fakejackpot', flat: buildFakeJackpot() };
       }
 
-      // Start with a fully random grid, then stamp combos on top
+      // ── Curse rolls — checked before normal combos ───────────────
+      const curseRoll = rand();
+      if (curseRoll < P_CURSE3) {
+        // Three 6's in one column
+        const flat = Array.from({ length: ROWS * COLS }, pick);
+        const col  = Math.floor(rand() * COLS);
+        for (let r = 0; r < ROWS; r++) flat[flatIdx(r, col)] = '6️⃣';
+        return { type: 'curse3', flat, curseCol: col };
+      } else if (curseRoll < P_CURSE3 + P_CURSE2) {
+        // Two 6's in one column — one random row gets a different symbol
+        const flat    = Array.from({ length: ROWS * COLS }, pick);
+        const col     = Math.floor(rand() * COLS);
+        const safeRow = Math.floor(rand() * ROWS);
+        for (let r = 0; r < ROWS; r++) {
+          flat[flatIdx(r, col)] = r === safeRow ? pick() : '6️⃣';
+        }
+        // Make sure safeRow actually differs
+        if (flat[flatIdx(safeRow, col)] === '6️⃣') flat[flatIdx(safeRow, col)] = pick();
+        return { type: 'curse2', flat, curseCol: col };
+      } else if (curseRoll < P_CURSE3 + P_CURSE2 + P_CURSE1) {
+        // One 6 in one column — only one random row gets a 6
+        const flat     = Array.from({ length: ROWS * COLS }, pick);
+        const col      = Math.floor(rand() * COLS);
+        const curseRow = Math.floor(rand() * ROWS);
+        flat[flatIdx(curseRow, col)] = '6️⃣';
+        return { type: 'curse1', flat, curseCol: col };
+      }
       const flat = Array.from({ length: ROWS * COLS }, pick);
 
       // Track how many combos have fired — once one fires, extras are much less likely
@@ -616,7 +1054,7 @@
     // ── Highlight helpers ─────────────────────────────────────────
     function clearHighlights() {
       slotMachine.querySelectorAll('.slot').forEach(s =>
-        s.classList.remove('win-3row','win-4row','win-diag','win-jackpot','win-3col','dimmed'));
+        s.classList.remove('win-3row','win-4row','win-diag','win-jackpot','win-3col','dimmed','curse'));
     }
 
     function applySet(cellSet, cls) {
@@ -702,37 +1140,66 @@
       await sleep(700);
 
       jackpotBigEmoji.textContent = flat[0];
-      jackpotSub.textContent = `ALL 12 ARE ${flat[0]}!`;
+      jackpotSub.textContent = `ALL 12 ARE ${flat[0]}! +$${PAY_JACKPOT}`;
       jackpotOverlay.classList.add('active');
+      launchCoins();
+    }
+
+    // ── Coin explosion ────────────────────────────────────────────
+    function launchCoins() {
+      const coinEmojis = ['🪙','💰','💵','✨','⭐','💛'];
+      const count = 90;
+      const cx = window.innerWidth  / 2;
+      const cy = window.innerHeight / 2;
+
+      // Fire multiple bursts with slight delays for a shower effect
+      [0, 120, 280, 460, 680].forEach(burstDelay => {
+        setTimeout(() => {
+          const burstCount = Math.floor(count / 5);
+          for (let i = 0; i < burstCount; i++) {
+            const el = document.createElement('div');
+            el.className = 'coin-particle';
+            el.textContent = coinEmojis[Math.floor(Math.random() * coinEmojis.length)];
+
+            // Random angle and distance
+            const angle  = Math.random() * Math.PI * 2;
+            const dist   = 260 + Math.random() * 480;
+            const tx     = Math.cos(angle) * dist;
+            const ty     = Math.sin(angle) * dist - 120;
+            const rot    = (Math.random() - 0.5) * 720;
+            const dur    = (0.8 + Math.random() * 1.0).toFixed(2);
+
+            el.style.setProperty('--tx',  tx + 'px');
+            el.style.setProperty('--ty',  ty + 'px');
+            el.style.setProperty('--rot', rot + 'deg');
+            el.style.setProperty('--dur', dur + 's');
+            el.style.left = cx + 'px';
+            el.style.top  = cy + 'px';
+            el.style.marginLeft = '-1.4rem';
+            el.style.marginTop  = '-1.4rem';
+
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), (parseFloat(dur) * 1000) + 100);
+          }
+        }, burstDelay);
+      });
     }
 
     // ── Staged FAKE jackpot reveal ────────────────────────────────
-    // Same flash sequence as real jackpot but only for the 3 matching cols.
-    // Skips the odd column. Then falls through to normal win detection.
+    // First 3 cols flash as if jackpot, then normal win detection for the rest.
     async function stagedFakeJackpotReveal(flat) {
       const slots = slotMachine.querySelectorAll('.slot');
-      const g = toGrid(flat);
-
-      // Find the odd column (one that doesn't share the majority symbol)
-      // The majority sym is whatever appears in col 0 row 0 unless it's the odd one
-      // Find the sym that appears in 3 cols
-      const colSyms = [];
-      for (let c = 0; c < COLS; c++) colSyms.push(g[0][c]);
-      const majSym = colSyms.find((s, _, arr) => arr.filter(x => x === s).length >= 3);
-      const oddCol = colSyms.findIndex(s => s !== majSym);
-
-      // The 3 matching column indices
-      const matchCols = [0,1,2,3].filter(c => c !== oddCol);
+      const matchCols = [0, 1, 2]; // always the first 3 columns
 
       function lightCells(indices, cls) {
         indices.forEach(i => {
           const s = slots[i];
-          s.classList.remove('win-3col','win-4row','win-diag','win-jackpot','dimmed');
+          s.classList.remove('win-3col','win-4row','win-3row','win-diag','win-jackpot','dimmed');
           s.classList.add(cls);
         });
         setTimeout(() => {
           indices.forEach(i => {
-            slots[i].classList.remove('win-3col','win-4row','win-diag');
+            slots[i].classList.remove('win-3col','win-4row','win-3row','win-diag');
             slots[i].classList.add('dimmed');
           });
         }, 220);
@@ -744,35 +1211,30 @@
 
       // ── Step 1: flash each of the 3 matching columns (3-down) ──
       for (const c of matchCols) {
-        const colCells = [0,1,2].map(r => flatIdx(r, c));
-        lightCells(colCells, 'win-3col');
+        lightCells([0,1,2].map(r => flatIdx(r, c)), 'win-3col');
         await sleep(280);
       }
       addWinTag('3col');
       await sleep(400);
 
-      // ── Step 2: flash each row — only the 3 matching cells per row (3-in-a-row) ──
+      // ── Step 2: flash each row's 3 matching cells (3-in-a-row) ──
       for (let r = 0; r < ROWS; r++) {
-        const rowCells = matchCols.map(c => flatIdx(r, c));
-        lightCells(rowCells, 'win-3row');
+        lightCells(matchCols.map(c => flatIdx(r, c)), 'win-3row');
         await sleep(280);
       }
       addWinTag('3row');
       await sleep(400);
 
-      // ── Step 3: flash diagonals within the 3 matching cols ──
-      // Build diagonals that only touch matchCols
+      // ── Step 3: flash diagonals within cols 0-2 ──
       const diagOptions = [];
       for (let r = 0; r <= ROWS-3; r++) {
         for (let c = 0; c <= COLS-3; c++) {
           const cells = [[r,c],[r+1,c+1],[r+2,c+2]];
-          if (cells.every(([,col]) => matchCols.includes(col)))
-            diagOptions.push(cells);
+          if (cells.every(([,col]) => matchCols.includes(col))) diagOptions.push(cells);
         }
         for (let c = COLS-1; c >= 2; c--) {
           const cells = [[r,c],[r+1,c-1],[r+2,c-2]];
-          if (cells.every(([,col]) => matchCols.includes(col)))
-            diagOptions.push(cells);
+          if (cells.every(([,col]) => matchCols.includes(col))) diagOptions.push(cells);
         }
       }
       for (const diag of diagOptions) {
@@ -781,10 +1243,8 @@
       }
       if (diagOptions.length > 0) { addWinTag('diag'); await sleep(400); }
 
-      // ── Clear all highlights then do normal win detection ──
-      // (catches any legit 4-in-a-row if odd col accidentally matched)
+      // ── Clear and run normal detection (catches legit 4-in-a-row if col 3 matched) ──
       slots.forEach(s => s.classList.remove('win-3col','win-3row','win-4row','win-diag','win-jackpot','dimmed'));
-
       const { cells3, cells4, cellsDiag, cells3col, allWin } = detectPatterns(flat);
       if (allWin.size > 0) {
         applyDimmed(allWin);
@@ -811,7 +1271,15 @@
       tagDelay += 0.12;
     }
 
-    // ── Animate a single reel strip ───────────────────────────────
+    function addCurseTag(label) {
+      const span = document.createElement('span');
+      span.className = 'tag';
+      span.style.cssText = 'background:#ff000018;color:#ff4444;border:1.5px solid #ff444488;';
+      span.style.animationDelay = `${tagDelay}s`;
+      span.textContent = label;
+      winMsg.appendChild(span);
+      tagDelay += 0.12;
+    }
     // FIX: finalSymbol is placed at index 0 (top of strip).
     // The strip starts translated DOWN to show the last random symbol,
     // then animates UP to translateY(0) which reveals index 0 = finalSymbol.
@@ -854,16 +1322,79 @@
       });
     }
 
+    // ── Combo payout calculator ───────────────────────────────────
+    // Counts individual win instances and applies combo bonuses:
+    //   single 3-slot = $3, two+ same 3-slot type = $6
+    //   single 4-row = $5, two 4-rows = $10
+    //   any 3-slot + any 4-slot mixed = $6
+    function calcPayout(flat) {
+      const g = toGrid(flat);
+
+      // Count each win type individually
+      let count3col = 0, count3row = 0, countDiag = 0, count4row = 0;
+
+      for (let c = 0; c < COLS; c++) {
+        const sym = g[0][c];
+        if (sym && g[1][c] === sym && g[2][c] === sym) count3col++;
+      }
+      for (let r = 0; r < ROWS; r++) {
+        if (g[r][0] && g[r].every(v => v === g[r][0])) { count4row++; continue; }
+        for (let c = 0; c <= COLS-3; c++) {
+          const sym = g[r][c];
+          if (sym && g[r][c+1] === sym && g[r][c+2] === sym) {
+            if (!g[r].every(v => v === sym)) count3row++;
+          }
+        }
+      }
+      for (let r = 0; r <= ROWS-3; r++) {
+        for (let c = 0; c <= COLS-3; c++) {
+          const sym = g[r][c];
+          if (sym && g[r+1][c+1] === sym && g[r+2][c+2] === sym) countDiag++;
+        }
+        for (let c = COLS-1; c >= 2; c--) {
+          const sym = g[r][c];
+          if (sym && g[r+1][c-1] === sym && g[r+2][c-2] === sym) countDiag++;
+        }
+      }
+
+      const total3slot = count3col + count3row + countDiag;
+      const total4slot = count4row;
+      let payout = 0;
+
+      if (total3slot === 0 && total4slot === 0) return 0;
+
+      // Mixed 3-slot + 4-slot combo = flat $6
+      if (total3slot > 0 && total4slot > 0) {
+        payout = 6;
+      } else if (total4slot > 0) {
+        // Pure 4-slot wins: $5 per, doubles to $10 if 2+
+        payout = total4slot >= 2 ? 10 : 5;
+      } else {
+        // Pure 3-slot wins
+        // Each individual type: $3 each, but $6 if 2+ of same type
+        const pay3col  = count3col  >= 2 ? 6 : count3col  * 3;
+        const pay3row  = count3row  >= 2 ? 6 : count3row  * 3;
+        const payDiag  = countDiag  >= 2 ? 6 : countDiag  * 3;
+        payout = pay3col + pay3row + payDiag;
+        // If multiple different 3-slot types are involved, it's also a combo → at least $6
+        const typesActive = (count3col > 0 ? 1 : 0) + (count3row > 0 ? 1 : 0) + (countDiag > 0 ? 1 : 0);
+        if (typesActive >= 2) payout = Math.max(payout, 6);
+      }
+
+      return payout;
+    }
+
     // ── Main spin ─────────────────────────────────────────────────
     async function spinSlots() {
       if (spinning) return;
       spinning = true;
+      chargeSpin();
       leverHousing.classList.add('disabled');
       winMsg.innerHTML = '';
       tagDelay = 0;
       clearHighlights();
 
-      const { type, flat } = buildResults();
+      const { type, flat, curseCol } = buildResults();
 
       const slots    = slotMachine.querySelectorAll('.slot');
       const promises = [];
@@ -874,10 +1405,40 @@
       });
       await Promise.all(promises);
 
-      if (type === 'jackpot') {
+      if (type === 'blank') {
+        // Nothing happens — reels spin and stop, no wins, no penalties
+      } else if (type === 'jackpot') {
         await stagedJackpotReveal(flat);
+        awardMoney(PAY_JACKPOT);
       } else if (type === 'fakejackpot') {
         await stagedFakeJackpotReveal(flat);
+        awardMoney(PAY_FAKE_JACKPOT);
+      } else if (type === 'curse1' || type === 'curse2' || type === 'curse3') {
+        // Highlight the cursed column in red
+        for (let r = 0; r < ROWS; r++) {
+          const idx = flatIdx(r, curseCol);
+          if (flat[idx] === '6️⃣') slots[idx].classList.add('curse');
+        }
+        await sleep(600);
+
+        if (type === 'curse1') {
+          awardMoney(-125);
+          addCurseTag('☠️ ONE 6 — $125 TAKEN');
+        } else if (type === 'curse2') {
+          awardMoney(-250);
+          addCurseTag('💀 TWO 6\'s — $250 TAKEN');
+        } else {
+          // curse3 — three 6's
+          if (balance < 11) {
+            // IRS screen
+            irsDebt.textContent = `Your balance: $${balance}`;
+            irsOverlay.classList.add('active');
+          } else {
+            balance = 0;
+            updateMoneyDisplay(true);
+            addCurseTag('🔥 THREE 6\'s — BALANCE WIPED TO $0');
+          }
+        }
       } else {
         const { cells3, cells4, cellsDiag, cells3col, allWin } = detectPatterns(flat);
 
@@ -903,6 +1464,10 @@
             applySet(cells4, 'win-4row');
             addWinTag('4row');
           }
+
+          // Award payout after all highlights shown
+          const payout = calcPayout(flat);
+          if (payout > 0) awardMoney(payout);
         }
       }
 
