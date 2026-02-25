@@ -628,46 +628,46 @@
       <div class="payout-section-title">SINGLES</div>
       <div class="payout-row">
         <span class="payout-name"><span>🟠</span>3 Down</span>
-        <span class="payout-right"><span class="payout-amt amt-orange">+$3</span><span class="payout-chance">20% per col</span></span>
+        <span class="payout-right"><span class="payout-amt amt-orange">+$6</span><span class="payout-chance">20% per col</span></span>
       </div>
       <div class="payout-row">
         <span class="payout-name"><span>🔵</span>3 In A Row</span>
-        <span class="payout-right"><span class="payout-amt amt-blue">+$3</span><span class="payout-chance">18% per row</span></span>
+        <span class="payout-right"><span class="payout-amt amt-blue">+$6</span><span class="payout-chance">18% per row</span></span>
       </div>
       <div class="payout-row">
         <span class="payout-name"><span>🟢</span>Diagonal</span>
-        <span class="payout-right"><span class="payout-amt amt-green">+$3</span><span class="payout-chance">12% per diag</span></span>
+        <span class="payout-right"><span class="payout-amt amt-green">+$6</span><span class="payout-chance">12% per diag</span></span>
       </div>
       <div class="payout-row">
         <span class="payout-name"><span>💜</span>4 In A Row</span>
-        <span class="payout-right"><span class="payout-amt amt-pink">+$5</span><span class="payout-chance">10% per row</span></span>
+        <span class="payout-right"><span class="payout-amt amt-pink">+$8</span><span class="payout-chance">10% per row</span></span>
       </div>
 
       <div class="payout-divider"></div>
       <div class="payout-section-title">COMBOS</div>
       <div class="payout-row">
         <span class="payout-name"><span>🟠🟠</span>Two 3 Downs</span>
-        <span class="payout-right"><span class="payout-amt amt-orange">+$6</span><span class="payout-chance">~10% chance</span></span>
+        <span class="payout-right"><span class="payout-amt amt-orange">+$12</span><span class="payout-chance">~10% chance</span></span>
       </div>
       <div class="payout-row">
         <span class="payout-name"><span>🔵🔵</span>Two 3 In A Rows</span>
-        <span class="payout-right"><span class="payout-amt amt-blue">+$6</span><span class="payout-chance">~9% chance</span></span>
+        <span class="payout-right"><span class="payout-amt amt-blue">+$12</span><span class="payout-chance">~9% chance</span></span>
       </div>
       <div class="payout-row">
         <span class="payout-name"><span>🟢🟢</span>Two Diagonals</span>
-        <span class="payout-right"><span class="payout-amt amt-green">+$6</span><span class="payout-chance">~7% chance</span></span>
+        <span class="payout-right"><span class="payout-amt amt-green">+$12</span><span class="payout-chance">~7% chance</span></span>
       </div>
       <div class="payout-row">
         <span class="payout-name"><span>🎯</span>Any Two 3-Slot Combos</span>
-        <span class="payout-right"><span class="payout-amt amt-yellow">+$6</span><span class="payout-chance">~11% chance</span></span>
+        <span class="payout-right"><span class="payout-amt amt-yellow">+$12</span><span class="payout-chance">~11% chance</span></span>
       </div>
       <div class="payout-row">
         <span class="payout-name"><span>🔗</span>Any 3-Slot + 4 In A Row</span>
-        <span class="payout-right"><span class="payout-amt amt-yellow">+$6</span><span class="payout-chance">~8% chance</span></span>
+        <span class="payout-right"><span class="payout-amt amt-yellow">+$14</span><span class="payout-chance">~8% chance</span></span>
       </div>
       <div class="payout-row">
         <span class="payout-name"><span>💜💜</span>Two 4 In A Rows</span>
-        <span class="payout-right"><span class="payout-amt amt-pink">+$10</span><span class="payout-chance">~6.4% chance</span></span>
+        <span class="payout-right"><span class="payout-amt amt-pink">+$16</span><span class="payout-chance">~6.4% chance</span></span>
       </div>
 
       <div class="payout-divider"></div>
@@ -768,10 +768,10 @@
     // ── Money system ──────────────────────────────────────────────
     let balance = 50; // starting balance
     const SPIN_COST   = 10;
-    const PAY_3COL    = 3;
-    const PAY_3ROW    = 3;
-    const PAY_DIAG    = 3;
-    const PAY_4ROW         = 5;
+    const PAY_3COL    = 6;
+    const PAY_3ROW    = 6;
+    const PAY_DIAG    = 6;
+    const PAY_4ROW         = 8;
     const PAY_JACKPOT      = 250;
     const PAY_FAKE_JACKPOT = 125;
 
@@ -1363,22 +1363,22 @@
 
       if (total3slot === 0 && total4slot === 0) return 0;
 
-      // Mixed 3-slot + 4-slot combo = flat $6
+      // Mixed 3-slot + 4-slot combo = $14
       if (total3slot > 0 && total4slot > 0) {
-        payout = 6;
+        payout = 14;
       } else if (total4slot > 0) {
-        // Pure 4-slot wins: $5 per, doubles to $10 if 2+
-        payout = total4slot >= 2 ? 10 : 5;
+        // Pure 4-slot wins: $5 single, $16 for two+
+        payout = total4slot >= 2 ? 16 : 5;
       } else {
         // Pure 3-slot wins
-        // Each individual type: $3 each, but $6 if 2+ of same type
-        const pay3col  = count3col  >= 2 ? 6 : count3col  * 3;
-        const pay3row  = count3row  >= 2 ? 6 : count3row  * 3;
-        const payDiag  = countDiag  >= 2 ? 6 : countDiag  * 3;
+        // Each individual type: $6 each, but $12 if 2+ of same type
+        const pay3col  = count3col  >= 2 ? 12 : count3col  * 6;
+        const pay3row  = count3row  >= 2 ? 12 : count3row  * 6;
+        const payDiag  = countDiag  >= 2 ? 12 : countDiag  * 6;
         payout = pay3col + pay3row + payDiag;
-        // If multiple different 3-slot types are involved, it's also a combo → at least $6
+        // If multiple different 3-slot types are involved → at least $12
         const typesActive = (count3col > 0 ? 1 : 0) + (count3row > 0 ? 1 : 0) + (countDiag > 0 ? 1 : 0);
-        if (typesActive >= 2) payout = Math.max(payout, 6);
+        if (typesActive >= 2) payout = Math.max(payout, 12);
       }
 
       return payout;
