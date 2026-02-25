@@ -569,6 +569,31 @@
       animation: pulse-curse 0.6s ease-in-out infinite;
     }
     @keyframes pulse-curse { 0%,100%{box-shadow:0 0 14px #ff000088} 50%{box-shadow:0 0 36px #ff2222ee} }
+
+    /* Seven jackpot */
+    .slot.win-jackpot7 {
+      border-color: #ff0080;
+      background: linear-gradient(135deg, #1a0030, #0d001a);
+      box-shadow: 0 0 28px #ff008088, inset 0 0 16px #ff008033;
+      animation: pulse-seven 0.5s ease-in-out infinite;
+    }
+    @keyframes pulse-seven {
+      0%,100% { box-shadow: 0 0 18px #ff008088, 0 0 36px #7700ff44; }
+      50%      { box-shadow: 0 0 40px #ff00cccc, 0 0 70px #7700ffaa; }
+    }
+    #jackpotOverlay.seven {
+      background: linear-gradient(160deg, #0d001acc, #200040dd);
+    }
+    #jackpotText.seven {
+      background: linear-gradient(90deg, #ff0080, #ff7700, #ffcc00, #00ff88, #00cfff, #7700ff, #ff0080);
+      background-size: 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: rainbowShift 1.2s linear infinite;
+      filter: drop-shadow(0 0 20px #ff0080);
+    }
+    @keyframes rainbowShift { to { background-position: 200%; } }
     #payoutBtn {
       background: linear-gradient(135deg, #1a1a1a, #111);
       border: 1.5px solid #3a3a3a;
@@ -588,6 +613,183 @@
     }
     #payoutBtn .btn-label { font-size: 0.5rem; letter-spacing: 2px; color: #888; }
     #payoutBtn .btn-text  { font-size: 1rem; color: #ffcc33; letter-spacing: 1px; }
+
+    /* ── Charms modal ── */
+    #charmsModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000000cc;
+      z-index: 150;
+      align-items: center;
+      justify-content: center;
+    }
+    #charmsModal.active { display: flex; }
+    #charmsPanel {
+      background: linear-gradient(160deg, #1a0d2e, #0d0d0d);
+      border: 2px solid #4a1a6a;
+      border-radius: 20px;
+      padding: 28px 32px;
+      max-width: 420px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 12px 48px #000c, 0 0 40px #cc88ff22;
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: #4a1a6a #0d0d0d;
+    }
+    #charmsPanel::-webkit-scrollbar { width: 6px; }
+    #charmsPanel::-webkit-scrollbar-track { background: #0d0d0d; border-radius: 3px; }
+    #charmsPanel::-webkit-scrollbar-thumb { background: #4a1a6a; border-radius: 3px; }
+    #charmsPanel::-webkit-scrollbar-thumb:hover { background: #7733aa; }
+    #charmsPanel h2 {
+      font-family: 'Bungee Shade', cursive;
+      color: #cc88ff;
+      font-size: 1.6rem;
+      text-align: center;
+      margin: 0 0 20px 0;
+      text-shadow: 0 0 16px #cc88ff55;
+    }
+    #charmsClose {
+      position: absolute;
+      top: 12px; right: 16px;
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+    #charmsClose:hover { color: #fff; }
+
+    #charmSlots {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .charm-box {
+      width: 100%;
+      min-height: 64px;
+      background: #ffffff05;
+      border: 1.5px dashed #4a1a6a;
+      border-radius: 10px;
+      box-shadow: inset 0 0 12px #00000033;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      gap: 10px;
+    }
+    .charm-box.in-stock {
+      border-style: solid;
+      border-color: #7733aa;
+      background: #ffffff08;
+      cursor: pointer;
+    }
+    .charm-box.in-stock:hover {
+      border-color: #cc88ff;
+      box-shadow: inset 0 0 16px #cc88ff11, 0 0 12px #cc88ff22;
+    }
+    .charm-box.owned {
+      border-color: #ffcc33;
+      border-style: solid;
+      background: #ffcc3308;
+    }
+    .charm-box.owned.active-charm {
+      box-shadow: 0 0 16px #ffcc3344;
+    }
+    .charm-emoji { font-size: 1.8rem; flex-shrink: 0; }
+    .charm-info  { flex: 1; }
+    .charm-name  { font-size: 0.65rem; color: #cc88ff; letter-spacing: 1px; margin-bottom: 2px; }
+    .charm-desc  { font-size: 0.55rem; color: #888; line-height: 1.4; }
+    .charm-uses  { font-size: 0.55rem; color: #ffcc33; margin-top: 2px; }
+    .charm-price { font-size: 0.75rem; color: #ffcc33; font-weight: bold; flex-shrink: 0; }
+    .charm-owned-badge { font-size: 0.55rem; color: #ffcc33; letter-spacing: 1px; flex-shrink: 0; }
+    .charm-sold-out { font-size: 0.55rem; color: #555; letter-spacing: 1px; flex-shrink: 0; }
+    .charm-speak { font-size: 0.6rem; color: #cc88ff; font-style: italic; margin-top: 3px; }
+
+    /* Pepper fly animation */
+    #pepperFly {
+      position: fixed;
+      font-size: 2.4rem;
+      pointer-events: none;
+      z-index: 300;
+      display: none;
+    }
+    @keyframes pepperFlyUp {
+      0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
+      50%  { transform: translateY(-220px) rotate(20deg); opacity: 1; }
+      100% { transform: translateY(120px) rotate(-10deg); opacity: 0; }
+    }
+
+    /* Ultimate jackpot overlay */
+    #ultimateOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000000ee;
+      z-index: 250;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #ultimateOverlay.active { display: flex; }
+    #ultimateTitle {
+      font-family: 'Bungee Shade', cursive;
+      font-size: 3.2rem;
+      text-align: center;
+      background: linear-gradient(90deg,#ff0080,#ff7700,#ffcc00,#00ff88,#00cfff,#7700ff,#ff0080);
+      background-size: 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: rainbowShift 0.8s linear infinite;
+      filter: drop-shadow(0 0 30px #ffcc00);
+    }
+    #ultimateSub {
+      font-size: 0.7rem;
+      color: #fff8;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+    #ultimateClose {
+      margin-top: 12px;
+      background: linear-gradient(90deg,#ff0080,#7700ff);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 40px;
+      font-family: 'Bungee', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px #ff008066;
+      transition: transform 0.1s;
+    }
+    #ultimateClose:hover { transform: scale(1.05); }
+    #charmsBtn {
+      margin-top: 18px;
+      background: linear-gradient(135deg, #1a1a1a, #111);
+      border: 1.5px solid #3a3a3a;
+      border-radius: 12px;
+      padding: 10px 32px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px #000a;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #charmsBtn:hover {
+      border-color: #cc88ff;
+      box-shadow: 0 0 16px #cc88ff44;
+    }
+    #charmsBtn .btn-label { font-size: 1rem; }
+    #charmsBtn .btn-text  { font-size: 0.9rem; color: #cc88ff; letter-spacing: 2px; font-family: 'Bungee', sans-serif; }
 
     /* ── Payout modal ── */
     #payoutModal {
@@ -753,6 +955,10 @@
         <span class="payout-name"><span>✨</span>Jackpot — All 12 Match</span>
         <span class="payout-right"><span class="payout-amt amt-gold">+$250</span><span class="payout-chance">5.5% chance</span></span>
       </div>
+      <div class="payout-row">
+        <span class="payout-name"><span>7️⃣</span>Seven Jackpot — All 12 Sevens</span>
+        <span class="payout-right"><span class="payout-amt" style="background:linear-gradient(90deg,#ff0080,#7700ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:bold">+$1000</span><span class="payout-chance">1.5% chance</span></span>
+      </div>
 
       <div class="payout-divider"></div>
       <div class="payout-section-title">CURSES 💀</div>
@@ -767,6 +973,17 @@
       <div class="payout-row">
         <span class="payout-name"><span>6️⃣6️⃣6️⃣</span>Three 6's in a column</span>
         <span class="payout-right"><span class="payout-amt" style="color:#ff0000">Balance → $0</span><span class="payout-chance">1.5% chance</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charms modal -->
+  <div id="charmsModal">
+    <div id="charmsPanel">
+      <button id="charmsClose">✕</button>
+      <h2>✨ Charms</h2>
+      <div id="charmSlots">
+        <!-- Charm boxes rendered by JS -->
       </div>
     </div>
   </div>
@@ -800,6 +1017,23 @@
     ← Return To Main Site
   </a>
 
+  <button id="charmsBtn">
+    <span class="btn-label">✨</span>
+    <span class="btn-text">CHARMS</span>
+  </button>
+
+
+
+  <!-- Ultimate Jackpot overlay -->
+  <div id="ultimateOverlay">
+    <div id="ultimateTitle">ULTAMATE JACKPOT!!!!</div>
+    <div id="ultimateSub">You have hit generational wealth but there is no stopping now 😉</div>
+    <button id="ultimateClose">💰 COLLECT 💰</button>
+  </div>
+
+  <!-- Pepper fly element -->
+  <div id="pepperFly">🌶️</div>
+
   <!-- Jackpot overlay -->
   <div id="jackpotOverlay">
     <div id="jackpotText">JACKPOT!</div>
@@ -828,6 +1062,7 @@
 
     // Each combo rolls independently — multiple can fire in one spin!
     const P_JACKPOT      = 0.055;  // 5.5% – ~1 in 18 spins
+    const P_JACKPOT7     = 0.015;  // 1.5% – all sevens jackpot
     const P_FAKE_JACKPOT = 0.08;   // 8%  – fake jackpot (3 cols match, 1 random)
     const P_4ROW    = 0.10;   // 10% per row
     const P_DIAG    = 0.12;   // 12% per diagonal
@@ -855,6 +1090,7 @@
     const PAY_DIAG    = 6;
     const PAY_4ROW         = 8;
     const PAY_JACKPOT      = 250;
+    const PAY_JACKPOT7     = 1000;
     const PAY_FAKE_JACKPOT = 125;
 
     function updateMoneyDisplay(pop = false) {
@@ -956,10 +1192,21 @@
     const irsDebt    = document.getElementById('irsDebt');
 
     document.getElementById('jackpotClose').addEventListener('click', () => {
-      jackpotOverlay.classList.remove('active');
+      jackpotOverlay.classList.remove('active', 'seven');
+      document.getElementById('jackpotText').classList.remove('seven');
     });
     document.getElementById('irsClose').addEventListener('click', () => {
       irsOverlay.classList.remove('active');
+    });
+    document.getElementById('charmsBtn').addEventListener('click', () => {
+      document.getElementById('charmsModal').classList.add('active');
+    });
+    document.getElementById('charmsClose').addEventListener('click', () => {
+      document.getElementById('charmsModal').classList.remove('active');
+    });
+    document.getElementById('charmsModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('charmsModal'))
+        document.getElementById('charmsModal').classList.remove('active');
     });
     document.getElementById('payoutBtn').addEventListener('click', () => {
       document.getElementById('payoutModal').classList.add('active');
@@ -1043,6 +1290,11 @@
       // Every ~10 spins, force a completely blank result
       if (spinCount % BLANK_SPIN_INTERVAL === 0) {
         return buildBlankResult();
+      }
+
+      // Seven jackpot — 1.5% chance, all 12 cells are 7️⃣
+      if (rand() < P_JACKPOT7) {
+        return { type: 'jackpot7', flat: Array(ROWS * COLS).fill('7️⃣') };
       }
 
       // Jackpot first (overrides everything)
@@ -1197,7 +1449,7 @@
     // ── Highlight helpers ─────────────────────────────────────────
     function clearHighlights() {
       slotMachine.querySelectorAll('.slot').forEach(s =>
-        s.classList.remove('win-3row','win-4row','win-diag','win-jackpot','win-3col','dimmed','curse'));
+        s.classList.remove('win-3row','win-4row','win-diag','win-jackpot','win-jackpot7','win-3col','dimmed','curse'));
     }
 
     function applySet(cellSet, cls) {
@@ -1326,7 +1578,36 @@
       }
     }
 
-    // ── Staged FAKE jackpot reveal ────────────────────────────────
+    // ── Staged SEVEN jackpot reveal ───────────────────────────────
+    async function stagedSevenJackpotReveal() {
+      const slots = slotMachine.querySelectorAll('.slot');
+
+      // Flash all cells purple/pink one by one
+      for (let i = 0; i < slots.length; i++) {
+        slots[i].classList.add('win-jackpot7');
+        await sleep(80);
+      }
+      await sleep(300);
+
+      // Flash them off and back on twice
+      for (let flash = 0; flash < 3; flash++) {
+        slots.forEach(s => s.classList.remove('win-jackpot7'));
+        await sleep(120);
+        slots.forEach(s => s.classList.add('win-jackpot7'));
+        await sleep(180);
+      }
+
+      winMsg.innerHTML = `<span class="tag tag-jackpot" style="animation-delay:0s;background:linear-gradient(90deg,#ff0080,#7700ff);border-color:#ff0080">🎰 7️⃣7️⃣7️⃣ SEVEN JACKPOT! 7️⃣7️⃣7️⃣ 🎰</span>`;
+      await sleep(600);
+
+      jackpotBigEmoji.textContent = '7️⃣';
+      jackpotSub.textContent = `ALL SEVENS! +$${PAY_JACKPOT7}`;
+      jackpotOverlay.classList.add('active', 'seven');
+      document.getElementById('jackpotText').classList.add('seven');
+      launchCoins();
+      // Extra big coin shower for 7 jackpot
+      setTimeout(launchCoins, 900);
+    }
     // First 3 cols flash as if jackpot, then normal win detection for the rest.
     async function stagedFakeJackpotReveal(flat) {
       const slots = slotMachine.querySelectorAll('.slot');
@@ -1548,6 +1829,14 @@
 
       if (type === 'blank') {
         // Nothing happens — reels spin and stop, no wins, no penalties
+      } else if (type === 'jackpot7') {
+        await stagedSevenJackpotReveal();
+        if (balance < 0) {
+          balance = 10;
+          updateMoneyDisplay(true);
+        } else {
+          awardMoney(PAY_JACKPOT7);
+        }
       } else if (type === 'jackpot') {
         await stagedJackpotReveal(flat);
         awardMoney(PAY_JACKPOT);
@@ -1680,6 +1969,431 @@
         leverBall.classList.remove('pulled');
       }
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ── CHARM SYSTEM ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════
+
+    const CHARM_DEFS = [
+      {
+        id: 'dog',
+        emoji: '🐶',
+        name: 'Good Boy',
+        desc: 'Gives +5% luck to all combos for one spin.',
+        price: 5,
+        stockWeight: 30,
+        speak: 'Bark bark! 🐶',
+        uses: 1,
+        maxUses: 1,
+        passive: false,
+      },
+      {
+        id: 'pepper',
+        emoji: '🌶️',
+        name: 'Hot Pepper',
+        desc: 'Activates randomly — flies up from under the lever. 5 uses.',
+        price: 10,
+        stockWeight: 25,
+        speak: "I have been sitting here for too long.",
+        uses: 5,
+        maxUses: 5,
+        passive: true,
+        activateChance: 0.35,
+      },
+      {
+        id: 'amendment',
+        emoji: '😣',
+        name: 'Know My Rights',
+        desc: 'If 3 sixes appear with <$11, blocks IRS and sets balance to $100. One use.',
+        price: 50,
+        stockWeight: 20,
+        speak: "I know my amendments. 😤",
+        uses: 1,
+        maxUses: 1,
+        passive: true,
+      },
+      {
+        id: 'bible',
+        emoji: '📖',
+        name: 'Holy Bible',
+        desc: 'Any 6(s) become 7s. Three 6s trigger a free 7 jackpot +$1000.',
+        price: 100,
+        stockWeight: 15,
+        speak: "You just need holy water and a little faith. 🙏",
+        uses: Infinity,
+        maxUses: Infinity,
+        passive: true,
+      },
+      {
+        id: 'stonks',
+        emoji: '💹',
+        name: 'Stonks',
+        desc: 'Interest every spin: starts +$1, +$1 per non-debt spin. Interest = 10% of balance.',
+        price: 250,
+        stockWeight: 18,
+        speak: "Ha, I play it smart. 📈",
+        uses: Infinity,
+        maxUses: Infinity,
+        passive: true,
+        interest: 1,
+      },
+      {
+        id: 'lucky7',
+        emoji: '7️⃣',
+        name: 'Lucky Seven',
+        desc: 'Randomly guarantees jackpots. 100 uses. Seven jackpot while active = ULTIMATE JACKPOT (+$10,000)!',
+        price: 1000,
+        stockWeight: 2,
+        speak: null,
+        uses: 100,
+        maxUses: 100,
+        passive: true,
+        activateChance: 0.20,
+      },
+    ];
+
+    // Player's owned charms state
+    const ownedCharms = {};  // id -> { uses, interest (for stonks) }
+
+    // 5 shop slots — each independently weighted-random, allowing repeats
+    const SHOP_SIZE = 5;
+    let shopSlots = [];  // array of CHARM_DEFS entries (may repeat)
+
+    function rollShop() {
+      const totalWeight = CHARM_DEFS.reduce((s, d) => s + d.stockWeight, 0);
+      shopSlots = [];
+      for (let i = 0; i < SHOP_SIZE; i++) {
+        let r = Math.random() * totalWeight;
+        for (const def of CHARM_DEFS) {
+          r -= def.stockWeight;
+          if (r <= 0) { shopSlots.push(def); break; }
+        }
+        if (shopSlots.length < i + 1) shopSlots.push(CHARM_DEFS[0]);
+      }
+    }
+
+    rollShop();
+
+    // Stonks interest tracker
+    let stonksInterest = 1;
+
+    // Lucky7 active this spin flag
+    let lucky7ActiveThisSpin = false;
+
+    const charmSlots  = document.getElementById('charmSlots');
+    const pepperFlyEl = document.getElementById('pepperFly');
+    const ultimateOverlay = document.getElementById('ultimateOverlay');
+
+    document.getElementById('ultimateClose').addEventListener('click', () => {
+      ultimateOverlay.classList.remove('active');
+    });
+
+    function renderCharms() {
+      charmSlots.innerHTML = '';
+
+      // 5 shop slots
+      shopSlots.forEach((def, idx) => {
+        const box = document.createElement('div');
+        box.className = 'charm-box';
+        const owned = ownedCharms[def.id];
+
+        if (owned) {
+          const usesLeft = owned.uses === Infinity ? '∞' : owned.uses;
+          box.classList.add('owned');
+          if (owned.uses > 0) box.classList.add('active-charm');
+          box.innerHTML = `
+            <span class="charm-emoji">${def.emoji}</span>
+            <div class="charm-info">
+              <div class="charm-name">${def.name}</div>
+              <div class="charm-desc">${def.desc}</div>
+              ${def.id === 'stonks' ? `<div class="charm-uses">Interest: +$${stonksInterest}/spin</div>` : `<div class="charm-uses">Uses left: ${usesLeft}</div>`}
+              ${def.speak ? `<div class="charm-speak" id="speak-${def.id}-${idx}" style="display:none">${def.speak}</div>` : ''}
+            </div>
+            <span class="charm-owned-badge">OWNED</span>`;
+          if (def.speak) {
+            box.addEventListener('click', () => {
+              const sp = document.getElementById(`speak-${def.id}-${idx}`);
+              sp.style.display = sp.style.display === 'none' ? 'block' : 'none';
+            });
+          }
+        } else {
+          box.classList.add('in-stock');
+          box.innerHTML = `
+            <span class="charm-emoji">${def.emoji}</span>
+            <div class="charm-info">
+              <div class="charm-name">${def.name}</div>
+              <div class="charm-desc">${def.desc}</div>
+            </div>
+            <span class="charm-price">$${def.price}</span>`;
+          box.addEventListener('click', () => buyCharm(def));
+        }
+        charmSlots.appendChild(box);
+      });
+
+      // Restock button
+      const restockWrap = document.createElement('div');
+      restockWrap.style.cssText = 'margin-top:14px;display:flex;justify-content:center;';
+      restockWrap.innerHTML = `<button id="restockBtn" style="background:linear-gradient(135deg,#1a0d2e,#0d0d0d);border:1.5px solid #4a1a6a;border-radius:10px;padding:10px 28px;cursor:pointer;color:#cc88ff;font-family:'Bungee',sans-serif;font-size:0.7rem;letter-spacing:1px;transition:border-color 0.2s,box-shadow 0.2s;">🔄 RESTOCK — $50</button>`;
+      charmSlots.appendChild(restockWrap);
+      document.getElementById('restockBtn').addEventListener('click', restockShop);
+    }
+
+    function buyCharm(def) {
+      if (ownedCharms[def.id]) return; // already owned
+      if (balance < def.price) { showCharmMsg('Not enough money!'); return; }
+      balance -= def.price;
+      updateMoneyDisplay(true);
+      ownedCharms[def.id] = { uses: def.maxUses };
+      renderCharms();
+    }
+
+    function restockShop() {
+      if (balance < 50) { showCharmMsg('Need $50 to restock!'); return; }
+      balance -= 50;
+      updateMoneyDisplay(true);
+      rollShop();
+      renderCharms();
+    }
+
+    // ── Charm fly-up animation (works for any emoji) ─────────────
+    function fireCharmPopup(emoji) {
+      const housing = document.getElementById('leverHousing');
+      const rect    = housing.getBoundingClientRect();
+      const cx      = rect.left + rect.width / 2;
+      const startY  = window.innerHeight + 40;
+
+      const el = document.createElement('div');
+      el.style.cssText = `
+        position: fixed;
+        font-size: 2.8rem;
+        pointer-events: none;
+        z-index: 300;
+        left: ${cx - 22}px;
+        top: ${startY}px;
+        animation: pepperFlyUp 1.1s ease-out forwards;
+      `;
+      el.textContent = emoji;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1300);
+    }
+
+    // Keep firePepper as an alias for backwards compat
+    function firePepper() { fireCharmPopup('🌶️'); }
+
+    // ── Charm hooks called from spinSlots ─────────────────────────
+
+    // Called BEFORE buildResults — can override result
+    function charmPreSpin() {
+      lucky7ActiveThisSpin = false;
+
+      // Lucky 7 charm — may guarantee jackpot
+      const l7 = ownedCharms['lucky7'];
+      if (l7 && l7.uses > 0) {
+        if (Math.random() < CHARM_DEFS.find(d=>d.id==='lucky7').activateChance) {
+          lucky7ActiveThisSpin = true;
+          l7.uses--;
+          fireCharmPopup('7️⃣');
+          if (l7.uses <= 0) delete ownedCharms['lucky7'];
+        }
+      }
+    }
+
+    // Called AFTER result is determined, can mutate flat[]
+    function charmModifyResult(result) {
+      // Pepper charm — random activation
+      const pepper = ownedCharms['pepper'];
+      if (pepper && pepper.uses > 0) {
+        const pepDef = CHARM_DEFS.find(d=>d.id==='pepper');
+        if (Math.random() < pepDef.activateChance) {
+          fireCharmPopup('🌶️');
+          pepper.uses--;
+          if (pepper.uses <= 0) delete ownedCharms['pepper'];
+          renderCharms();
+        }
+      }
+
+      // Bible charm — 6s become 7s
+      const bible = ownedCharms['bible'];
+      if (bible && result.type.startsWith('curse')) {
+        fireCharmPopup('📖');
+        if (result.type === 'curse3') {
+          result.flat = result.flat.map(() => '7️⃣');
+          result.type = 'curse3_bible';
+        } else {
+          result.flat = result.flat.map(v => v === '6️⃣' ? '7️⃣' : v);
+          result.type = 'bible_convert';
+        }
+      }
+
+      return result;
+    }
+
+    // Called AFTER spin resolves
+    async function charmPostSpin(resultType, flat) {
+      // Dog charm — one-time luck boost
+      const dog = ownedCharms['dog'];
+      if (dog && dog.uses > 0) {
+        fireCharmPopup('🐶');
+        dog.uses--;
+        if (dog.uses <= 0) delete ownedCharms['dog'];
+        renderCharms();
+      }
+
+      // Stonks — pay interest (10% of balance, min $1)
+      const stonks = ownedCharms['stonks'];
+      if (stonks) {
+        stonksInterest = balance > 0 ? Math.max(1, Math.floor(balance * 0.10)) : 1;
+        fireCharmPopup('💹');
+        awardMoney(stonksInterest);
+        addWinTag(`💹 INTEREST +$${stonksInterest}`);
+        renderCharms();
+      }
+
+      // Amendment — pop up if it's owned and waiting (visual reminder)
+      const amend = ownedCharms['amendment'];
+      if (amend && amend.uses > 0 && resultType === 'curse3') {
+        fireCharmPopup('😣');
+      }
+    }
+
+    // Luck multiplier for calcPayout when dog active
+    function getLuckMultiplier() {
+      return ownedCharms['dog'] && ownedCharms['dog'].uses > 0 ? 1.05 : 1.0;
+    }
+
+    renderCharms();
+
+    // ── Patch spinSlots to integrate charms ──────────────────────
+    // We override the original spinSlots with a charm-aware version
+    const _originalSpinSlots = spinSlots;
+    spinSlots = async function() {
+      if (spinning || !coinInserted) return;
+      spinning = true;
+      leverHousing.classList.add('disabled');
+      winMsg.innerHTML = '';
+      tagDelay = 0;
+      clearHighlights();
+
+      charmPreSpin();
+
+      let result = buildResults();
+
+      // Lucky7 override — force jackpot
+      if (lucky7ActiveThisSpin && result.type !== 'jackpot7') {
+        const sym = Math.random() < 0.15 ? '7️⃣' : null;
+        if (sym) {
+          result = { type: 'jackpot7', flat: Array(ROWS * COLS).fill('7️⃣'), curseCol: null };
+        } else {
+          result = { type: 'jackpot', flat: Array(ROWS * COLS).fill(IMAGES[Math.floor(Math.random()*IMAGES.length)]), curseCol: null };
+        }
+      }
+
+      result = charmModifyResult(result);
+
+      const { type, flat, curseCol } = result;
+      const slots = slotMachine.querySelectorAll('.slot');
+      const promises = [];
+      slots.forEach((slot, i) => {
+        const col   = i % COLS;
+        const strip = slot.querySelector('.slot-strip');
+        promises.push(animateReel(strip, flat[i], col * 220));
+      });
+      await Promise.all(promises);
+
+      if (type === 'blank') {
+        // nothing
+
+      } else if (type === 'jackpot7') {
+        await stagedSevenJackpotReveal();
+        if (lucky7ActiveThisSpin) {
+          // ULTIMATE JACKPOT
+          balance += 10000;
+          updateMoneyDisplay(true);
+          launchCoins(); setTimeout(launchCoins, 500); setTimeout(launchCoins, 1000);
+          jackpotOverlay.classList.remove('active','seven');
+          ultimateOverlay.classList.add('active');
+        } else {
+          if (balance < 0) { balance = 10; updateMoneyDisplay(true); }
+          else awardMoney(PAY_JACKPOT7);
+        }
+
+      } else if (type === 'curse3_bible') {
+        // Bible stopped three 6s → free 7 jackpot
+        await stagedSevenJackpotReveal();
+        awardMoney(1000);
+        addWinTag('📖 BIBLE SAVED YOU! +$1000');
+
+      } else if (type === 'bible_convert') {
+        // Bible converted 6s to 7s — show as normal win
+        const { cells3, cells4, cellsDiag, cells3col, allWin } = detectPatterns(flat);
+        addWinTag('📖 BIBLE: 6s → 7s!');
+        if (allWin.size > 0) {
+          applyDimmed(allWin);
+          if (cells3col.size > 0) { applySet(cells3col,'win-3col'); await sleep(300); }
+          if (cells3.size   > 0) { applySet(cells3,'win-3row');    await sleep(300); }
+          if (cellsDiag.size> 0) { applySet(cellsDiag,'win-diag'); await sleep(300); }
+          if (cells4.size   > 0) { applySet(cells4,'win-4row'); }
+          const payout = Math.round(calcPayout(flat) * getLuckMultiplier());
+          if (payout > 0) awardMoney(payout);
+        }
+
+      } else if (type === 'jackpot') {
+        await stagedJackpotReveal(flat);
+        awardMoney(PAY_JACKPOT);
+
+      } else if (type === 'fakejackpot') {
+        await stagedFakeJackpotReveal(flat);
+        awardMoney(PAY_FAKE_JACKPOT);
+
+      } else if (type === 'curse1' || type === 'curse2' || type === 'curse3') {
+        for (let r = 0; r < ROWS; r++) {
+          const idx = flatIdx(r, curseCol);
+          if (flat[idx] === '6️⃣') slots[idx].classList.add('curse');
+        }
+        await sleep(600);
+
+        if (type === 'curse1') {
+          awardMoney(-125); addCurseTag('☠️ ONE 6 — $125 TAKEN');
+        } else if (type === 'curse2') {
+          awardMoney(-250); addCurseTag('💀 TWO 6\'s — $250 TAKEN');
+        } else {
+          // Amendment charm — blocks IRS when broke
+          const amend = ownedCharms['amendment'];
+          if (balance < 11 && amend && amend.uses > 0) {
+            fireCharmPopup('😣');
+            amend.uses--;
+            if (amend.uses <= 0) delete ownedCharms['amendment'];
+            balance = 100;
+            updateMoneyDisplay(true);
+            addWinTag('😣 AMENDMENT INVOKED! Saved from IRS → $100');
+            renderCharms();
+          } else if (balance < 11) {
+            irsDebt.textContent = `Your balance: $${balance}`;
+            irsOverlay.classList.add('active');
+          } else {
+            balance = 0; updateMoneyDisplay(true);
+            addCurseTag('🔥 THREE 6\'s — BALANCE WIPED TO $0');
+          }
+        }
+
+      } else {
+        const { cells3, cells4, cellsDiag, cells3col, allWin } = detectPatterns(flat);
+        if (allWin.size > 0) {
+          applyDimmed(allWin);
+          if (cells3col.size > 0) { applySet(cells3col,'win-3col'); addWinTag('3col'); await sleep(350); }
+          if (cells3.size   > 0) { applySet(cells3,'win-3row');    addWinTag('3row'); await sleep(350); }
+          if (cellsDiag.size> 0) { applySet(cellsDiag,'win-diag'); addWinTag('diag'); await sleep(350); }
+          if (cells4.size   > 0) { applySet(cells4,'win-4row');    addWinTag('4row'); }
+          const payout = Math.round(calcPayout(flat) * getLuckMultiplier());
+          if (payout > 0) awardMoney(payout);
+        }
+      }
+
+      await charmPostSpin(type, flat);
+
+      spinning = false;
+      resetCoinSlot();
+    };
   </script>
 </body>
 </html>
