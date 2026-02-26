@@ -2050,6 +2050,19 @@
         passive: true,
         activateChance: 0.20,
       },
+      {
+        id: 'briefcase',
+        emoji: '💼',
+        name: 'Briefcase',
+        desc: 'Clears your debt to $0, or gives you +1/3 of your current money. Can be bought while in debt!',
+        price: 10,
+        stockWeight: 25,
+        speak: "Money 🤑🤑🤑",
+        uses: 1,
+        maxUses: 1,
+        allowDebt: true,  // only charm buyable in debt
+        passive: false,
+      },
     ];
 
     // Player's owned charms state
@@ -2059,26 +2072,31 @@
     const SHOP_SIZE = 5;
     let shopSlots = [];  // array of CHARM_DEFS entries (may repeat)
 
-    function rollShop() {
-      const totalWeight = CHARM_DEFS.reduce((s, d) => s + d.stockWeight, 0);
+    function rollShop(isFirstRoll = false) {
+      // On first roll, exclude lucky7 and stonks from appearing
+      const eligible = isFirstRoll
+        ? CHARM_DEFS.filter(d => d.id !== 'lucky7' && d.id !== 'stonks')
+        : CHARM_DEFS;
+      const totalWeight = eligible.reduce((s, d) => s + d.stockWeight, 0);
       shopSlots = [];
       for (let i = 0; i < SHOP_SIZE; i++) {
         let r = Math.random() * totalWeight;
-        for (const def of CHARM_DEFS) {
+        for (const def of eligible) {
           r -= def.stockWeight;
           if (r <= 0) { shopSlots.push(def); break; }
         }
-        if (shopSlots.length < i + 1) shopSlots.push(CHARM_DEFS[0]);
+        if (shopSlots.length < i + 1) shopSlots.push(eligible[0]);
       }
     }
 
-    rollShop();
+    rollShop(true); // first roll — no lucky7 or stonks
 
     // Stonks interest tracker
     let stonksInterest = 1;
 
     // Lucky7 active this spin flag
     let lucky7ActiveThisSpin = false;
+    let pepperFiredThisSpin  = false;
 
     const charmSlots  = document.getElementById('charmSlots');
     const pepperFlyEl = document.getElementById('pepperFly');
@@ -2123,6 +2141,7 @@
             <div class="charm-info">
               <div class="charm-name">${def.name}</div>
               <div class="charm-desc">${def.desc}</div>
+              ${def.allowDebt ? `<div class="charm-uses" style="color:#ff8844">✅ Buyable in debt</div>` : ''}
             </div>
             <span class="charm-price">$${def.price}</span>`;
           box.addEventListener('click', () => buyCharm(def));
@@ -2140,9 +2159,40 @@
 
     function buyCharm(def) {
       if (ownedCharms[def.id]) return; // already owned
-      if (balance < def.price) { showCharmMsg('Not enough money!'); return; }
+
+      // Debt check — only briefcase can be bought in debt
+      if (balance < 0 && !def.allowDebt) { showCharmMsg('Not enough money!'); return; }
+
+      // Price check — need enough total (for debt-allowed charm, need $10 above debt)
+      if (def.allowDebt) {
+        // Can buy as long as balance + price >= 0 (i.e. balance >= -price... actually just need $10 above current debt)
+        // Simplest: they need the price itself available regardless
+        if (balance < -def.price) { showCharmMsg('Not enough money!'); return; }
+      } else {
+        if (balance < def.price) { showCharmMsg('Not enough money!'); return; }
+      }
+
       balance -= def.price;
       updateMoneyDisplay(true);
+
+      // Briefcase — apply effect immediately on purchase
+      if (def.id === 'briefcase') {
+        if (balance < 0) {
+          // In debt — clear to 0
+          balance = 0;
+        } else if (balance <= 2) {
+          // $1 or $2 — just give what they have (effectively double)
+          balance += balance;
+        } else {
+          // Give 1/3 of current balance (floored)
+          balance += Math.floor(balance / 3);
+        }
+        updateMoneyDisplay(true);
+        showCharmMsg('💼 Briefcase used! Money 🤑🤑🤑');
+        fireCharmPopup('💼');
+        return; // one-time use, don't add to ownedCharms
+      }
+
       ownedCharms[def.id] = { uses: def.maxUses };
       renderCharms();
     }
@@ -2151,7 +2201,7 @@
       if (balance < 50) { showCharmMsg('Need $50 to restock!'); return; }
       balance -= 50;
       updateMoneyDisplay(true);
-      rollShop();
+      rollShop(false);
       renderCharms();
     }
 
@@ -2182,40 +2232,73 @@
 
     // ── Charm hooks called from spinSlots ─────────────────────────
 
-    // Called BEFORE buildResults — can override result
-    function charmPreSpin() {
+    // Called BEFORE reels spin — decides which charms fire, plays popups one-at-a-time
+    async function charmPreSpin(result) {
       lucky7ActiveThisSpin = false;
+      pepperFiredThisSpin  = false;
+      const activeEmojis = [];
 
-      // Lucky 7 charm — may guarantee jackpot
+      // Dog — active every spin while it has uses
+      if (ownedCharms['dog'] && ownedCharms['dog'].uses > 0) {
+        activeEmojis.push('🐶');
+      }
+
+      // Pepper — 75% chance per spin
+      const pepper = ownedCharms['pepper'];
+      if (pepper && pepper.uses > 0 && Math.random() < 0.75) {
+        pepperFiredThisSpin = true;
+        activeEmojis.push('🌶️');
+        pepper.uses--;
+        if (pepper.uses <= 0) delete ownedCharms['pepper'];
+        renderCharms();
+      }
+
+      // Stonks — always fires when owned
+      if (ownedCharms['stonks']) {
+        activeEmojis.push('💹');
+      }
+
+      // Bible — fires when a curse is incoming
+      if (ownedCharms['bible'] && result.type.startsWith('curse')) {
+        activeEmojis.push('📖');
+      }
+
+      // Amendment — fires when curse3 incoming and balance < 11
+      if (ownedCharms['amendment'] && ownedCharms['amendment'].uses > 0
+          && result.type === 'curse3' && balance < 11) {
+        activeEmojis.push('😣');
+      }
+
+      // Lucky7 — 20% chance to activate and guarantee a jackpot
       const l7 = ownedCharms['lucky7'];
-      if (l7 && l7.uses > 0) {
-        if (Math.random() < CHARM_DEFS.find(d=>d.id==='lucky7').activateChance) {
-          lucky7ActiveThisSpin = true;
-          l7.uses--;
-          fireCharmPopup('7️⃣');
-          if (l7.uses <= 0) delete ownedCharms['lucky7'];
-        }
+      if (l7 && l7.uses > 0 && Math.random() < 0.20) {
+        lucky7ActiveThisSpin = true;
+        l7.uses--;
+        if (l7.uses <= 0) delete ownedCharms['lucky7'];
+        renderCharms();
+        activeEmojis.push('7️⃣');
+      }
+
+      // Play each popup one at a time — reels don't spin until all done
+      for (const emoji of activeEmojis) {
+        fireCharmPopup(emoji);
+        await sleep(1400);
       }
     }
 
-    // Called AFTER result is determined, can mutate flat[]
+    // Mutates result after popups — applies lucky7 override, bible conversion, dog luck guarantee
     function charmModifyResult(result) {
-      // Pepper charm — random activation
-      const pepper = ownedCharms['pepper'];
-      if (pepper && pepper.uses > 0) {
-        const pepDef = CHARM_DEFS.find(d=>d.id==='pepper');
-        if (Math.random() < pepDef.activateChance) {
-          fireCharmPopup('🌶️');
-          pepper.uses--;
-          if (pepper.uses <= 0) delete ownedCharms['pepper'];
-          renderCharms();
+      // Lucky7 — force jackpot
+      if (lucky7ActiveThisSpin) {
+        if (Math.random() < 0.15) {
+          return { type: 'jackpot7', flat: Array(ROWS * COLS).fill('7️⃣'), curseCol: null };
+        } else {
+          return { type: 'jackpot', flat: Array(ROWS * COLS).fill(IMAGES[Math.floor(Math.random()*IMAGES.length)]), curseCol: null };
         }
       }
 
-      // Bible charm — 6s become 7s
-      const bible = ownedCharms['bible'];
-      if (bible && result.type.startsWith('curse')) {
-        fireCharmPopup('📖');
+      // Bible — convert 6s to 7s
+      if (ownedCharms['bible'] && result.type.startsWith('curse')) {
         if (result.type === 'curse3') {
           result.flat = result.flat.map(() => '7️⃣');
           result.type = 'curse3_bible';
@@ -2225,15 +2308,32 @@
         }
       }
 
+      // Dog OR Pepper luck — guarantee at least a 3-in-a-row if result would be blank or no win
+      const dogActive    = ownedCharms['dog']    && ownedCharms['dog'].uses > 0;
+      const pepperActive = ownedCharms['pepper'] && ownedCharms['pepper'].uses >= 0; // pepper already consumed a use in preSpin
+      // Check if pepper popped this spin by seeing if it had uses before (tracked via pepperFiredThisSpin)
+      if (dogActive || pepperFiredThisSpin) {
+        const isNoWin = result.type === 'blank'
+          || (result.type === 'normal' && detectPatterns(result.flat).allWin.size === 0);
+        if (isNoWin) {
+          const sym  = pick();
+          const flat = result.flat.slice();
+          flat[flatIdx(1, 0)] = sym;
+          flat[flatIdx(1, 1)] = sym;
+          flat[flatIdx(1, 2)] = sym;
+          if (flat[flatIdx(1, 3)] === sym) flat[flatIdx(1, 3)] = IMAGES[(IMAGES.indexOf(sym) + 1) % IMAGES.length];
+          result = { type: 'normal', flat, curseCol: null };
+        }
+      }
+
       return result;
     }
 
-    // Called AFTER spin resolves
+    // Called after spin resolves
     async function charmPostSpin(resultType, flat) {
-      // Dog charm — one-time luck boost
+      // Dog — consume use
       const dog = ownedCharms['dog'];
       if (dog && dog.uses > 0) {
-        fireCharmPopup('🐶');
         dog.uses--;
         if (dog.uses <= 0) delete ownedCharms['dog'];
         renderCharms();
@@ -2243,16 +2343,9 @@
       const stonks = ownedCharms['stonks'];
       if (stonks) {
         stonksInterest = balance > 0 ? Math.max(1, Math.floor(balance * 0.10)) : 1;
-        fireCharmPopup('💹');
         awardMoney(stonksInterest);
         addWinTag(`💹 INTEREST +$${stonksInterest}`);
         renderCharms();
-      }
-
-      // Amendment — pop up if it's owned and waiting (visual reminder)
-      const amend = ownedCharms['amendment'];
-      if (amend && amend.uses > 0 && resultType === 'curse3') {
-        fireCharmPopup('😣');
       }
     }
 
@@ -2263,9 +2356,7 @@
 
     renderCharms();
 
-    // ── Patch spinSlots to integrate charms ──────────────────────
-    // We override the original spinSlots with a charm-aware version
-    const _originalSpinSlots = spinSlots;
+    // ── Charm-aware spinSlots ─────────────────────────────────────
     spinSlots = async function() {
       if (spinning || !coinInserted) return;
       spinning = true;
@@ -2274,22 +2365,16 @@
       tagDelay = 0;
       clearHighlights();
 
-      charmPreSpin();
-
+      // 1. Build result so charmPreSpin knows what's coming (curse? jackpot?)
       let result = buildResults();
 
-      // Lucky7 override — force jackpot
-      if (lucky7ActiveThisSpin && result.type !== 'jackpot7') {
-        const sym = Math.random() < 0.15 ? '7️⃣' : null;
-        if (sym) {
-          result = { type: 'jackpot7', flat: Array(ROWS * COLS).fill('7️⃣'), curseCol: null };
-        } else {
-          result = { type: 'jackpot', flat: Array(ROWS * COLS).fill(IMAGES[Math.floor(Math.random()*IMAGES.length)]), curseCol: null };
-        }
-      }
+      // 2. Play active charm popups ONE AT A TIME before reels spin
+      await charmPreSpin(result);
 
+      // 3. Apply charm mutations (lucky7 override, bible 6→7, etc.)
       result = charmModifyResult(result);
 
+      // 4. NOW spin the reels
       const { type, flat, curseCol } = result;
       const slots = slotMachine.querySelectorAll('.slot');
       const promises = [];
