@@ -2285,8 +2285,8 @@
         activeEmojis.push('💹');
       }
 
-      // Bible — always show if owned (it's watching every spin)
-      if (ownedCharms['bible']) {
+      // Bible — only fires when there's a curse (6s) incoming
+      if (ownedCharms['bible'] && result.type.startsWith('curse')) {
         activeEmojis.push('📖');
       }
 
@@ -2323,7 +2323,7 @@
         }
       }
 
-      // Bible — convert 6s to 7s
+      // Bible — convert 6s to 7s, then 50% chance it disappears
       if (ownedCharms['bible'] && result.type.startsWith('curse')) {
         if (result.type === 'curse3') {
           result.flat = result.flat.map(() => '7️⃣');
@@ -2331,6 +2331,11 @@
         } else {
           result.flat = result.flat.map(v => v === '6️⃣' ? '7️⃣' : v);
           result.type = 'bible_convert';
+        }
+        // 50% chance the bible is consumed after use
+        if (Math.random() < 0.5) {
+          delete ownedCharms['bible'];
+          renderCharms();
         }
       }
 
