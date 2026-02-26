@@ -2106,6 +2106,9 @@
       ultimateOverlay.classList.remove('active');
     });
 
+    // Track which shop slot indices have been permanently bought (for briefcase per-slot limiting)
+    const boughtSlotIndices = new Set();
+
     function renderCharms() {
       charmSlots.innerHTML = '';
 
@@ -2114,8 +2117,18 @@
         const box = document.createElement('div');
         box.className = 'charm-box';
         const owned = ownedCharms[def.id];
+        const slotBought = boughtSlotIndices.has(idx); // this specific slot was bought
 
-        if (owned) {
+        if (slotBought) {
+          // Slot used up — show as sold regardless of charm type
+          box.innerHTML = `
+            <span class="charm-emoji" style="opacity:0.25">${def.emoji}</span>
+            <div class="charm-info">
+              <div class="charm-name" style="color:#444">${def.name}</div>
+              <div class="charm-desc" style="color:#333">Already purchased.</div>
+            </div>
+            <span class="charm-sold-out">SOLD</span>`;
+        } else if (owned && def.id !== 'briefcase') {
           const usesLeft = owned.uses === Infinity ? '∞' : owned.uses;
           box.classList.add('owned');
           if (owned.uses > 0) box.classList.add('active-charm');
@@ -2144,7 +2157,7 @@
               ${def.allowDebt ? `<div class="charm-uses" style="color:#ff8844">✅ Buyable in debt</div>` : ''}
             </div>
             <span class="charm-price">$${def.price}</span>`;
-          box.addEventListener('click', () => buyCharm(def));
+          box.addEventListener('click', () => buyCharm(def, idx));
         }
         charmSlots.appendChild(box);
       });
@@ -2157,16 +2170,13 @@
       document.getElementById('restockBtn').addEventListener('click', restockShop);
     }
 
-    function buyCharm(def) {
-      if (ownedCharms[def.id]) return; // already owned
+    function buyCharm(def, slotIdx) {
+      if (def.id !== 'briefcase' && ownedCharms[def.id]) return; // already owned (non-briefcase)
 
       // Debt check — only briefcase can be bought in debt
       if (balance < 0 && !def.allowDebt) { showCharmMsg('Not enough money!'); return; }
 
-      // Price check — need enough total (for debt-allowed charm, need $10 above debt)
       if (def.allowDebt) {
-        // Can buy as long as balance + price >= 0 (i.e. balance >= -price... actually just need $10 above current debt)
-        // Simplest: they need the price itself available regardless
         if (balance < -def.price) { showCharmMsg('Not enough money!'); return; }
       } else {
         if (balance < def.price) { showCharmMsg('Not enough money!'); return; }
@@ -2175,33 +2185,33 @@
       balance -= def.price;
       updateMoneyDisplay(true);
 
-      // Briefcase — apply effect immediately on purchase
+      // Briefcase — apply effect immediately, mark this slot as bought
       if (def.id === 'briefcase') {
+        boughtSlotIndices.add(slotIdx);
         if (balance < 0) {
-          // In debt — clear to 0
           balance = 0;
         } else if (balance <= 2) {
-          // $1 or $2 — just give what they have (effectively double)
           balance += balance;
         } else {
-          // Give 1/3 of current balance (floored)
           balance += Math.floor(balance / 3);
         }
         updateMoneyDisplay(true);
         showCharmMsg('💼 Briefcase used! Money 🤑🤑🤑');
         fireCharmPopup('💼');
-        return; // one-time use, don't add to ownedCharms
+        renderCharms();
+        return;
       }
 
       ownedCharms[def.id] = { uses: def.maxUses };
       renderCharms();
     }
 
-    function restockShop() {
+    function restockShop(isFirstRoll = false) {
       if (balance < 50) { showCharmMsg('Need $50 to restock!'); return; }
       balance -= 50;
       updateMoneyDisplay(true);
       rollShop(false);
+      boughtSlotIndices.clear();
       renderCharms();
     }
 
@@ -2286,7 +2296,7 @@
       }
     }
 
-    // Mutates result after popups — applies lucky7 override, bible conversion, dog luck guarantee
+    // Mutates result after popups — applies lucky7 override, bible conversion, luck guarantees
     function charmModifyResult(result) {
       // Lucky7 — force jackpot
       if (lucky7ActiveThisSpin) {
@@ -2308,19 +2318,28 @@
         }
       }
 
-      // Dog OR Pepper luck — guarantee at least a 3-in-a-row if result would be blank or no win
-      const dogActive    = ownedCharms['dog']    && ownedCharms['dog'].uses > 0;
-      const pepperActive = ownedCharms['pepper'] && ownedCharms['pepper'].uses >= 0; // pepper already consumed a use in preSpin
-      // Check if pepper popped this spin by seeing if it had uses before (tracked via pepperFiredThisSpin)
+      // Luck guarantee — dog active OR pepper fired this spin
+      const dogActive = ownedCharms['dog'] && ownedCharms['dog'].uses > 0;
       if (dogActive || pepperFiredThisSpin) {
-        const isNoWin = result.type === 'blank'
+        // If the result is a curse, blank, or no-win normal spin — upgrade it
+        const isBad = result.type === 'blank'
+          || result.type.startsWith('curse')
           || (result.type === 'normal' && detectPatterns(result.flat).allWin.size === 0);
-        if (isNoWin) {
+
+        if (isBad) {
+          // 15% chance to upgrade all the way to a jackpot
+          if (Math.random() < 0.15) {
+            return { type: 'jackpot', flat: Array(ROWS * COLS).fill(IMAGES[Math.floor(Math.random()*IMAGES.length)]), curseCol: null };
+          }
+          // Otherwise guarantee at least a solid combo (3-col + 3-row)
           const sym  = pick();
-          const flat = result.flat.slice();
-          flat[flatIdx(1, 0)] = sym;
+          const flat = Array.from({ length: ROWS * COLS }, pick);
+          // Force a matching column (col 0)
+          for (let r = 0; r < ROWS; r++) flat[flatIdx(r, 0)] = sym;
+          // Force a matching row (row 1 middle)
           flat[flatIdx(1, 1)] = sym;
           flat[flatIdx(1, 2)] = sym;
+          // Make sure col 3 row 1 doesn't accidentally extend to 4-row
           if (flat[flatIdx(1, 3)] === sym) flat[flatIdx(1, 3)] = IMAGES[(IMAGES.indexOf(sym) + 1) % IMAGES.length];
           result = { type: 'normal', flat, curseCol: null };
         }
@@ -2409,15 +2428,48 @@
         addWinTag('📖 BIBLE SAVED YOU! +$1000');
 
       } else if (type === 'bible_convert') {
-        // Bible converted 6s to 7s — show as normal win
-        const { cells3, cells4, cellsDiag, cells3col, allWin } = detectPatterns(flat);
+        // Bible converted 6s to 7s — light up the 7s in seven-jackpot style, pay by count
+        const sevenCount = flat.filter(v => v === '7️⃣').length;
+        const sevenIdxs  = flat.map((v, i) => v === '7️⃣' ? i : -1).filter(i => i !== -1);
+
         addWinTag('📖 BIBLE: 6s → 7s!');
+
+        // Flash 7 cells one by one
+        for (const idx of sevenIdxs) {
+          slots[idx].classList.add('win-jackpot7');
+          await sleep(120);
+        }
+        await sleep(300);
+
+        // Flash all together twice
+        for (let f = 0; f < 2; f++) {
+          sevenIdxs.forEach(i => slots[i].classList.remove('win-jackpot7'));
+          await sleep(100);
+          sevenIdxs.forEach(i => slots[i].classList.add('win-jackpot7'));
+          await sleep(150);
+        }
+
+        // Pay based on how many 7s
+        if (sevenCount >= 3) {
+          if (balance < 0) {
+            balance = 1000;
+            updateMoneyDisplay(true);
+            addWinTag('📖 THREE 7s! Debt cleared → $1000 💜');
+          } else {
+            awardMoney(2000);
+            addWinTag('📖 THREE 7s! +$2000 💜');
+          }
+        } else if (sevenCount === 2) {
+          awardMoney(250);
+          addWinTag('📖 TWO 7s! +$250 💜');
+        } else if (sevenCount === 1) {
+          awardMoney(125);
+          addWinTag('📖 ONE 7! +$125 💜');
+        }
+
+        // Also pay any normal wins on non-7 cells
+        const { allWin } = detectPatterns(flat);
         if (allWin.size > 0) {
-          applyDimmed(allWin);
-          if (cells3col.size > 0) { applySet(cells3col,'win-3col'); await sleep(300); }
-          if (cells3.size   > 0) { applySet(cells3,'win-3row');    await sleep(300); }
-          if (cellsDiag.size> 0) { applySet(cellsDiag,'win-diag'); await sleep(300); }
-          if (cells4.size   > 0) { applySet(cells4,'win-4row'); }
           const payout = Math.round(calcPayout(flat) * getLuckMultiplier());
           if (payout > 0) awardMoney(payout);
         }
