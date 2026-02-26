@@ -2106,28 +2106,39 @@
       ultimateOverlay.classList.remove('active');
     });
 
-    // Track which shop slot indices have been permanently bought (for briefcase per-slot limiting)
-    const boughtSlotIndices = new Set();
+    // Track which shop slot indices have been bought (stores def for display)
+    const boughtSlotMeta = new Map(); // idx -> def
 
     function renderCharms() {
       charmSlots.innerHTML = '';
 
-      // 5 shop slots
       shopSlots.forEach((def, idx) => {
         const box = document.createElement('div');
         box.className = 'charm-box';
         const owned = ownedCharms[def.id];
-        const slotBought = boughtSlotIndices.has(idx); // this specific slot was bought
+        const slotBought = boughtSlotMeta.has(idx);
 
         if (slotBought) {
-          // Slot used up — show as sold regardless of charm type
-          box.innerHTML = `
-            <span class="charm-emoji" style="opacity:0.25">${def.emoji}</span>
-            <div class="charm-info">
-              <div class="charm-name" style="color:#444">${def.name}</div>
-              <div class="charm-desc" style="color:#333">Already purchased.</div>
-            </div>
-            <span class="charm-sold-out">SOLD</span>`;
+          // This specific slot was purchased — show OWNED or SOLD depending on charm type
+          const meta = boughtSlotMeta.get(idx);
+          if (meta.id === 'briefcase') {
+            box.classList.add('owned');
+            box.innerHTML = `
+              <span class="charm-emoji">${meta.emoji}</span>
+              <div class="charm-info">
+                <div class="charm-name">${meta.name}</div>
+                <div class="charm-desc">Already used.</div>
+              </div>
+              <span class="charm-owned-badge">OWNED</span>`;
+          } else {
+            box.innerHTML = `
+              <span class="charm-emoji" style="opacity:0.25">${meta.emoji}</span>
+              <div class="charm-info">
+                <div class="charm-name" style="color:#444">${meta.name}</div>
+                <div class="charm-desc" style="color:#333">Already purchased.</div>
+              </div>
+              <span class="charm-sold-out">SOLD</span>`;
+          }
         } else if (owned && def.id !== 'briefcase') {
           const usesLeft = owned.uses === Infinity ? '∞' : owned.uses;
           box.classList.add('owned');
@@ -2170,14 +2181,21 @@
       document.getElementById('restockBtn').addEventListener('click', restockShop);
     }
 
+    function showCharmMsg(msg) {
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a0d2e;border:1.5px solid #cc88ff;border-radius:10px;padding:10px 24px;color:#cc88ff;font-size:0.75rem;letter-spacing:1px;z-index:400;';
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2200);
+    }
+
     function buyCharm(def, slotIdx) {
-      if (def.id !== 'briefcase' && ownedCharms[def.id]) return; // already owned (non-briefcase)
+      if (def.id !== 'briefcase' && ownedCharms[def.id]) return;
 
-      // Debt check — only briefcase can be bought in debt
-      if (balance < 0 && !def.allowDebt) { showCharmMsg('Not enough money!'); return; }
-
-      if (def.allowDebt) {
-        if (balance < -def.price) { showCharmMsg('Not enough money!'); return; }
+      // Briefcase: allowed in debt as long as balance + price >= 0 (i.e. debt not deeper than $10)
+      // All others: need balance >= price and not in debt
+      if (def.id === 'briefcase') {
+        if (balance + def.price < 0) { showCharmMsg('Not enough money!'); return; }
       } else {
         if (balance < def.price) { showCharmMsg('Not enough money!'); return; }
       }
@@ -2185,9 +2203,8 @@
       balance -= def.price;
       updateMoneyDisplay(true);
 
-      // Briefcase — apply effect immediately, mark this slot as bought
       if (def.id === 'briefcase') {
-        boughtSlotIndices.add(slotIdx);
+        boughtSlotMeta.set(slotIdx, def);
         if (balance < 0) {
           balance = 0;
         } else if (balance <= 2) {
@@ -2211,7 +2228,7 @@
       balance -= 50;
       updateMoneyDisplay(true);
       rollShop(false);
-      boughtSlotIndices.clear();
+      boughtSlotMeta.clear();
       renderCharms();
     }
 
@@ -2268,20 +2285,19 @@
         activeEmojis.push('💹');
       }
 
-      // Bible — fires when a curse is incoming
-      if (ownedCharms['bible'] && result.type.startsWith('curse')) {
+      // Bible — always show if owned (it's watching every spin)
+      if (ownedCharms['bible']) {
         activeEmojis.push('📖');
       }
 
-      // Amendment — fires when curse3 incoming and balance < 11
-      if (ownedCharms['amendment'] && ownedCharms['amendment'].uses > 0
-          && result.type === 'curse3' && balance < 11) {
+      // Amendment — always show if owned (it's on guard)
+      if (ownedCharms['amendment'] && ownedCharms['amendment'].uses > 0) {
         activeEmojis.push('😣');
       }
 
-      // Lucky7 — 65% chance to activate and guarantee a jackpot
+      // Lucky7 — 20% chance to activate and guarantee a jackpot
       const l7 = ownedCharms['lucky7'];
-      if (l7 && l7.uses > 0 && Math.random() < 0.65) {
+      if (l7 && l7.uses > 0 && Math.random() < 0.20) {
         lucky7ActiveThisSpin = true;
         l7.uses--;
         if (l7.uses <= 0) delete ownedCharms['lucky7'];
@@ -2384,16 +2400,16 @@
       tagDelay = 0;
       clearHighlights();
 
-      // 1. Build result so charmPreSpin knows what's coming (curse? jackpot?)
+      // 1. Build result so charmPreSpin knows what's coming
       let result = buildResults();
 
       // 2. Play active charm popups ONE AT A TIME before reels spin
       await charmPreSpin(result);
 
-      // 3. Apply charm mutations (lucky7 override, bible 6→7, etc.)
+      // 3. Apply charm mutations
       result = charmModifyResult(result);
 
-      // 4. NOW spin the reels
+      // 4. Spin the reels
       const { type, flat, curseCol } = result;
       const slots = slotMachine.querySelectorAll('.slot');
       const promises = [];
@@ -2404,70 +2420,51 @@
       });
       await Promise.all(promises);
 
+      // 5. Handle result
       if (type === 'blank') {
         // nothing
 
       } else if (type === 'jackpot7') {
         await stagedSevenJackpotReveal();
         if (lucky7ActiveThisSpin) {
-          // ULTIMATE JACKPOT
           balance += 10000;
           updateMoneyDisplay(true);
           launchCoins(); setTimeout(launchCoins, 500); setTimeout(launchCoins, 1000);
           jackpotOverlay.classList.remove('active','seven');
           ultimateOverlay.classList.add('active');
+          await waitForOverlayClose('ultimateOverlay');
         } else {
           if (balance < 0) { balance = 10; updateMoneyDisplay(true); }
           else awardMoney(PAY_JACKPOT7);
+          await waitForOverlayClose('jackpotOverlay');
         }
 
       } else if (type === 'curse3_bible') {
-        // Bible stopped three 6s → free 7 jackpot
         await stagedSevenJackpotReveal();
         awardMoney(1000);
         addWinTag('📖 BIBLE SAVED YOU! +$1000');
+        await waitForOverlayClose('jackpotOverlay');
 
       } else if (type === 'bible_convert') {
-        // Bible converted 6s to 7s — light up the 7s in seven-jackpot style, pay by count
         const sevenCount = flat.filter(v => v === '7️⃣').length;
         const sevenIdxs  = flat.map((v, i) => v === '7️⃣' ? i : -1).filter(i => i !== -1);
-
         addWinTag('📖 BIBLE: 6s → 7s!');
-
-        // Flash 7 cells one by one
-        for (const idx of sevenIdxs) {
-          slots[idx].classList.add('win-jackpot7');
-          await sleep(120);
-        }
+        for (const idx of sevenIdxs) { slots[idx].classList.add('win-jackpot7'); await sleep(120); }
         await sleep(300);
-
-        // Flash all together twice
         for (let f = 0; f < 2; f++) {
           sevenIdxs.forEach(i => slots[i].classList.remove('win-jackpot7'));
           await sleep(100);
           sevenIdxs.forEach(i => slots[i].classList.add('win-jackpot7'));
           await sleep(150);
         }
-
-        // Pay based on how many 7s
         if (sevenCount >= 3) {
-          if (balance < 0) {
-            balance = 1000;
-            updateMoneyDisplay(true);
-            addWinTag('📖 THREE 7s! Debt cleared → $1000 💜');
-          } else {
-            awardMoney(2000);
-            addWinTag('📖 THREE 7s! +$2000 💜');
-          }
+          if (balance < 0) { balance = 1000; updateMoneyDisplay(true); addWinTag('📖 THREE 7s! Debt cleared → $1000 💜'); }
+          else { awardMoney(2000); addWinTag('📖 THREE 7s! +$2000 💜'); }
         } else if (sevenCount === 2) {
-          awardMoney(250);
-          addWinTag('📖 TWO 7s! +$250 💜');
+          awardMoney(250); addWinTag('📖 TWO 7s! +$250 💜');
         } else if (sevenCount === 1) {
-          awardMoney(125);
-          addWinTag('📖 ONE 7! +$125 💜');
+          awardMoney(125); addWinTag('📖 ONE 7! +$125 💜');
         }
-
-        // Also pay any normal wins on non-7 cells
         const { allWin } = detectPatterns(flat);
         if (allWin.size > 0) {
           const payout = Math.round(calcPayout(flat) * getLuckMultiplier());
@@ -2477,10 +2474,12 @@
       } else if (type === 'jackpot') {
         await stagedJackpotReveal(flat);
         awardMoney(PAY_JACKPOT);
+        await waitForOverlayClose('jackpotOverlay');
 
       } else if (type === 'fakejackpot') {
         await stagedFakeJackpotReveal(flat);
         awardMoney(PAY_FAKE_JACKPOT);
+        await waitForOverlayClose('jackpotOverlay');
 
       } else if (type === 'curse1' || type === 'curse2' || type === 'curse3') {
         for (let r = 0; r < ROWS; r++) {
@@ -2488,25 +2487,23 @@
           if (flat[idx] === '6️⃣') slots[idx].classList.add('curse');
         }
         await sleep(600);
-
         if (type === 'curse1') {
           awardMoney(-125); addCurseTag('☠️ ONE 6 — $125 TAKEN');
         } else if (type === 'curse2') {
           awardMoney(-250); addCurseTag('💀 TWO 6\'s — $250 TAKEN');
         } else {
-          // Amendment charm — blocks IRS when broke
           const amend = ownedCharms['amendment'];
           if (balance < 11 && amend && amend.uses > 0) {
             fireCharmPopup('😣');
             amend.uses--;
             if (amend.uses <= 0) delete ownedCharms['amendment'];
-            balance = 100;
-            updateMoneyDisplay(true);
+            balance = 100; updateMoneyDisplay(true);
             addWinTag('😣 AMENDMENT INVOKED! Saved from IRS → $100');
             renderCharms();
           } else if (balance < 11) {
             irsDebt.textContent = `Your balance: $${balance}`;
             irsOverlay.classList.add('active');
+            await waitForOverlayClose('irsOverlay');
           } else {
             balance = 0; updateMoneyDisplay(true);
             addCurseTag('🔥 THREE 6\'s — BALANCE WIPED TO $0');
@@ -2531,6 +2528,21 @@
       spinning = false;
       resetCoinSlot();
     };
+
+    // Waits until an overlay loses its 'active' class before resolving
+    function waitForOverlayClose(id) {
+      return new Promise(resolve => {
+        const el = document.getElementById(id);
+        if (!el || !el.classList.contains('active')) { resolve(); return; }
+        const observer = new MutationObserver(() => {
+          if (!el.classList.contains('active')) {
+            observer.disconnect();
+            resolve();
+          }
+        });
+        observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+      });
+    }
   </script>
 </body>
 </html>
