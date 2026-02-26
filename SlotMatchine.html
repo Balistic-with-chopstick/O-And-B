@@ -2290,8 +2290,9 @@
         activeEmojis.push('📖');
       }
 
-      // Amendment — always show if owned (it's on guard)
-      if (ownedCharms['amendment'] && ownedCharms['amendment'].uses > 0) {
+      // Amendment — only fires when curse3 incoming and balance < 11
+      if (ownedCharms['amendment'] && ownedCharms['amendment'].uses > 0
+          && result.type === 'curse3' && balance < 11) {
         activeEmojis.push('😣');
       }
 
@@ -2342,26 +2343,38 @@
       // Luck guarantee — dog active OR pepper fired this spin
       const dogActive = ownedCharms['dog'] && ownedCharms['dog'].uses > 0;
       if (dogActive || pepperFiredThisSpin) {
-        // If the result is a curse, blank, or no-win normal spin — upgrade it
-        const isBad = result.type === 'blank'
+        // Block: blank, curses (6s), fakejackpot, or any result with no multi-cell combo
+        const needsUpgrade = result.type === 'blank'
           || result.type.startsWith('curse')
+          || result.type === 'fakejackpot'
+          || result.type === 'bible_convert'
           || (result.type === 'normal' && detectPatterns(result.flat).allWin.size === 0);
 
-        if (isBad) {
-          // 15% chance to upgrade all the way to a jackpot
-          if (Math.random() < 0.15) {
-            return { type: 'jackpot', flat: Array(ROWS * COLS).fill(IMAGES[Math.floor(Math.random()*IMAGES.length)]), curseCol: null };
+        if (needsUpgrade) {
+          // 20% chance of full jackpot
+          if (Math.random() < 0.20) {
+            const sym = IMAGES[Math.floor(Math.random() * IMAGES.length)];
+            return { type: 'jackpot', flat: Array(ROWS * COLS).fill(sym), curseCol: null };
           }
-          // Otherwise guarantee at least a solid combo (3-col + 3-row)
-          const sym  = pick();
-          const flat = Array.from({ length: ROWS * COLS }, pick);
-          // Force a matching column (col 0)
-          for (let r = 0; r < ROWS; r++) flat[flatIdx(r, 0)] = sym;
-          // Force a matching row (row 1 middle)
-          flat[flatIdx(1, 1)] = sym;
-          flat[flatIdx(1, 2)] = sym;
-          // Make sure col 3 row 1 doesn't accidentally extend to 4-row
-          if (flat[flatIdx(1, 3)] === sym) flat[flatIdx(1, 3)] = IMAGES[(IMAGES.indexOf(sym) + 1) % IMAGES.length];
+
+          // Otherwise build a guaranteed multi-cell combo with NO 6s
+          const safeImages = IMAGES.filter(img => img !== '6️⃣');
+          const safePick = () => safeImages[Math.floor(Math.random() * safeImages.length)];
+          let flat;
+          let attempts = 0;
+          do {
+            flat = Array.from({ length: ROWS * COLS }, safePick);
+            const sym = safePick();
+            // Force 3-col on col 0
+            for (let r = 0; r < ROWS; r++) flat[flatIdx(r, 0)] = sym;
+            // Force matching row 1
+            flat[flatIdx(1, 1)] = sym;
+            flat[flatIdx(1, 2)] = sym;
+            // Prevent accidental 4-row
+            if (flat[flatIdx(1, 3)] === sym) flat[flatIdx(1, 3)] = safeImages[(safeImages.indexOf(sym) + 1) % safeImages.length];
+            attempts++;
+          } while (flat.includes('6️⃣') && attempts < 50);
+
           result = { type: 'normal', flat, curseCol: null };
         }
       }
