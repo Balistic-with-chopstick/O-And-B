@@ -631,6 +631,46 @@
       font-family: 'Bungee', sans-serif;
     }
 
+    #taxesOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000000ee;
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 14px;
+    }
+    #taxesOverlay.active { display: flex; }
+    #taxesTitle {
+      font-family: 'Bungee Shade', cursive;
+      font-size: 3.8rem;
+      color: #ff2222;
+      text-shadow: 0 0 40px #ff0000, 0 0 80px #ff000077, 0 4px 0 #600000;
+      letter-spacing: 4px;
+      animation: jackpotBounce 0.6s ease-in-out infinite alternate;
+      text-align: center;
+    }
+    #taxesEmoji  { font-size: 4rem; animation: spinEmoji 1.2s linear infinite; }
+    #taxesSub    { font-size: 1rem; color: #ff888888; letter-spacing: 2px; text-align: center; max-width: 360px; line-height: 1.6; }
+    #taxesRefund { font-size: 1.4rem; color: #ff4444; font-family: 'Bungee', sans-serif; }
+    #taxesClose  {
+      margin-top: 10px;
+      background: #ff2222;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 40px;
+      font-family: 'Bungee', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 20px #ff000066;
+      transition: transform 0.1s;
+    }
+    #taxesClose:hover { transform: scale(1.05); }
+
     /* curse highlight on slot */
     .slot.curse {
       border-color: #ff2222;
@@ -1129,6 +1169,14 @@
     <button id="irsClose">😭 OKAY FINE 😭</button>
   </div>
 
+  <div id="taxesOverlay">
+    <div id="taxesTitle">💸 TAXES 💸</div>
+    <div id="taxesEmoji">🏛️</div>
+    <div id="taxesSub">The IRS took all of your charms away...</div>
+    <div id="taxesRefund"></div>
+    <button id="taxesClose">😤 FINE WHATEVER 😤</button>
+  </div>
+
   <script>
     const IMAGES = [
       '🍒','🍋','🍉','🍇','🍓','🍊','🍌','🍍',
@@ -1184,7 +1232,7 @@
 
     function checkDeadline() {
       if (balance >= deadlineTarget) {
-        // Met — set new target to exactly balance*2 so bar starts at 50%
+        // Met — just advance, no charm wipe, no taxes
         deadlineTarget = balance * 2;
         deadlineSpinsLeft = DEADLINE_SPINS;
         updateDeadlineHud();
@@ -1194,16 +1242,32 @@
       // Not met — consume a spin
       deadlineSpinsLeft--;
       if (deadlineSpinsLeft <= 0) {
-        // Failed
+        // Failed — wipe all charms
+        const hadCharms = Object.keys(ownedCharms).length > 0;
+        Object.keys(ownedCharms).forEach(k => delete ownedCharms[k]);
+        boughtSlotMeta.clear();
+        renderCharms();
+
         const owed = deadlineTarget;
+        const wasInDebt = balance < 0;
         balance = owed;
         deadlineSpinsLeft = DEADLINE_SPINS;
         deadlineTarget = balance * 2;
         checkGoldenClover();
         updateMoneyDisplay(true);
         updateDeadlineHud();
-        irsDebt.textContent = `You needed $${owed} but failed. Balance set to $${owed}.`;
-        irsOverlay.classList.add('active');
+
+        if (!wasInDebt) {
+          // Not in debt — taxes screen: charms taken, money given back
+          const refund = Math.floor(owed * 0.25);
+          balance += refund;
+          updateMoneyDisplay(true);
+          taxesRefund.textContent = `...but gave you $${refund} back. 💸`;
+          taxesOverlay.classList.add('active');
+        } else {
+          irsDebt.textContent = `You needed $${owed} but failed. Balance set to $${owed}.`;
+          irsOverlay.classList.add('active');
+        }
       } else {
         updateDeadlineHud();
       }
@@ -1333,6 +1397,8 @@
 
     const irsOverlay = document.getElementById('irsOverlay');
     const irsDebt    = document.getElementById('irsDebt');
+    const taxesOverlay  = document.getElementById('taxesOverlay');
+    const taxesRefund   = document.getElementById('taxesRefund');
 
     document.getElementById('jackpotClose').addEventListener('click', () => {
       jackpotOverlay.classList.remove('active', 'seven');
@@ -1340,6 +1406,9 @@
     });
     document.getElementById('irsClose').addEventListener('click', () => {
       irsOverlay.classList.remove('active');
+    });
+    document.getElementById('taxesClose').addEventListener('click', () => {
+      taxesOverlay.classList.remove('active');
     });
     document.getElementById('charmsBtn').addEventListener('click', () => {
       document.getElementById('charmsModal').classList.add('active');
@@ -1457,6 +1526,12 @@
       if (luckLevel === 2) {
         pJackpot7 = Math.min(1, P_JACKPOT7 + 0.25);
         pJackpot  = Math.min(1, P_JACKPOT  + 0.20);
+      }
+
+      // Last Chance — only activates on the final deadline spin
+      if (ownedCharms['lastchance'] && deadlineSpinsLeft === 1) {
+        pJackpot7 = Math.min(1, pJackpot7 + 0.24);
+        pJackpot  = Math.min(1, pJackpot  + 0.20);
       }
 
       // Use safe pick (no 6️⃣) when luck is active
@@ -2236,6 +2311,18 @@
         maxUses: Infinity,
         passive: true,
       },
+      {
+        id: 'lastchance',
+        emoji: '%',
+        name: 'Last Chance',
+        desc: 'Only activates on your last deadline spin. Boosts jackpot chance by +20% and seven jackpot by +24%!',
+        price: 15,
+        stockWeight: 55,
+        speak: "It ain't over till it's over. %",
+        uses: Infinity,
+        maxUses: Infinity,
+        passive: true,
+      },
     ];
 
     // Player's owned charms state
@@ -2423,7 +2510,8 @@
           { id: 'clover',       emoji: '🍀',    label: 'CLOVER' },
           { id: 'goldenclover', emoji: '🌟🍀',  label: 'GOLDEN CLOVER' },
           { id: 'treasure',     emoji: '💰',     label: 'TREASURE' },
-          { id: 'coin',         emoji: '🪙',     label: 'LUCKY COIN' },
+          { id: 'coin',         emoji: '🪙',  label: 'LUCKY COIN' },
+          { id: 'lastchance',   emoji: '%',   label: 'LAST CHANCE' },
         ];
         hudCharms.forEach(({ id, emoji, label }) => {
           const c = ownedCharms[id];
@@ -2436,6 +2524,10 @@
           else if (c.uses === Infinity) usesText = '∞';
           else usesText = `${c.uses} LEFT`;
           pill.innerHTML = `<span class="hud-charm-emoji">${emoji}</span> ${label} <span class="hud-charm-uses">${usesText}</span>`;
+          // Last Chance glows red on final spin
+          if (id === 'lastchance' && deadlineSpinsLeft === 1) {
+            pill.style.cssText = 'border-color:#ff2222;box-shadow:0 0 12px #ff000088;animation:pulse-curse 0.6s ease-in-out infinite;';
+          }
           hud.appendChild(pill);
         });
       }
@@ -2653,6 +2745,11 @@
       // Coin — only show popup if it will actually activate this spin
       if (coinActivating) {
         activeEmojis.push('🪙');
+      }
+
+      // Last Chance — only show popup on the final deadline spin
+      if (ownedCharms['lastchance'] && deadlineSpinsLeft === 1) {
+        activeEmojis.push('%');
       }
 
       // Play each popup one at a time — reels don't spin until all done
