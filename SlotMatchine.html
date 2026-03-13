@@ -671,6 +671,117 @@
     }
     #taxesClose:hover { transform: scale(1.05); }
 
+    /* ── Menu / Pause overlays ── */
+    .menu-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000000ee;
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    .menu-overlay.active { display: flex; }
+
+    .menu-panel {
+      background: linear-gradient(160deg, #1a0d2e 0%, #0d0d0d 100%);
+      border: 2px solid #4a1a6a;
+      border-radius: 20px;
+      padding: 40px 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 0 60px #8800ff44, 0 0 120px #44008822;
+      max-width: 420px;
+      width: 90vw;
+    }
+    .menu-panel-wide {
+      max-width: 560px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .menu-title {
+      font-family: 'Bungee Shade', cursive;
+      font-size: 3rem;
+      color: #ffcc00;
+      text-shadow: 0 0 30px #ffaa0088, 0 4px 0 #885500;
+      letter-spacing: 3px;
+      text-align: center;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .menu-btn {
+      background: linear-gradient(135deg, #ffcc00, #ff8800);
+      color: #1a0d0d;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 28px;
+      font-family: 'Bungee', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px #ffaa0066;
+      width: 100%;
+    }
+    .menu-btn:hover { transform: scale(1.03); box-shadow: 0 6px 28px #ffcc0088; }
+    .menu-btn-secondary {
+      background: linear-gradient(135deg, #1a0d2e, #2a1040);
+      color: #cc88ff;
+      border: 1.5px solid #4a1a6a;
+      box-shadow: 0 4px 14px #44008844;
+    }
+    .menu-btn-secondary:hover { box-shadow: 0 6px 22px #8800ff66; border-color: #8844cc; }
+
+    /* Charms info list */
+    #charmsInfoList {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .charm-info-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #ffffff08;
+      border: 1px solid #ffffff14;
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .charm-info-emoji { font-size: 1.5rem; min-width: 36px; text-align: center; }
+    .charm-info-body  { flex: 1; }
+    .charm-info-name  { font-family: 'Bungee', sans-serif; font-size: 0.75rem; color: #ffcc00; letter-spacing: 1px; }
+    .charm-info-meta  { font-size: 0.65rem; color: #cc88ff99; margin-top: 2px; letter-spacing: 0.5px; }
+
+    /* Pause button */
+    #pauseBtn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      background: #1a0d2e;
+      border: 1.5px solid #4a1a6a;
+      border-radius: 10px;
+      color: #cc88ff;
+      font-size: 1.2rem;
+      width: 42px;
+      height: 42px;
+      cursor: pointer;
+      z-index: 150;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #pauseBtn:hover { border-color: #8844cc; box-shadow: 0 0 14px #8800ff66; }
+
     /* curse highlight on slot */
     .slot.curse {
       border-color: #ff2222;
@@ -1139,6 +1250,7 @@
     <span class="btn-label">✨</span>
     <span class="btn-text">CHARMS</span>
   </button>
+  <button id="pauseBtn">⏸</button>
 
 
 
@@ -1175,6 +1287,39 @@
     <div id="taxesSub">The IRS took all of your charms away...</div>
     <div id="taxesRefund"></div>
     <button id="taxesClose">😤 FINE WHATEVER 😤</button>
+  </div>
+
+  <!-- MAIN MENU -->
+  <div id="mainMenu" class="menu-overlay active">
+    <div class="menu-panel">
+      <div class="menu-title">🎰<br>Slot Machine</div>
+      <div class="menu-buttons">
+        <button class="menu-btn" id="menuPlay">▶ PLAY</button>
+        <button class="menu-btn menu-btn-secondary" id="menuPayout">💰 PAYOUT TABLE</button>
+        <button class="menu-btn menu-btn-secondary" id="menuCharmsInfo">✨ CHARMS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAUSE SCREEN -->
+  <div id="pauseOverlay" class="menu-overlay">
+    <div class="menu-panel">
+      <div class="menu-title" style="font-size:2.2rem">⏸ PAUSED</div>
+      <div class="menu-buttons">
+        <button class="menu-btn" id="pauseResume">▶ RESUME</button>
+        <button class="menu-btn menu-btn-secondary" id="pauseRestart">🔄 RESTART</button>
+        <button class="menu-btn menu-btn-secondary" id="pauseMenu">🏠 MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARMS INFO SCREEN -->
+  <div id="charmsInfoOverlay" class="menu-overlay">
+    <div class="menu-panel menu-panel-wide">
+      <div class="menu-title" style="font-size:2rem">✨ CHARMS</div>
+      <div id="charmsInfoList"></div>
+      <button class="menu-btn menu-btn-secondary" id="charmsInfoBack" style="margin-top:18px">← BACK</button>
+    </div>
   </div>
 
   <script>
@@ -3071,6 +3216,8 @@
           console.error('finally logic error:', fe);
         }
 
+        scheduleSave();
+
         if (freeSpin) {
           freeSpin = false;
           coinPickedUp = false;
@@ -3116,6 +3263,214 @@
       if (!s) return;
       s.currentTime = 0;
       s.play().catch(() => {});
+    }
+
+    // ── Save / Load ───────────────────────────────────────────────
+    const SAVE_KEY = 'slotMachineSave_v1';
+
+    function saveGame() {
+      try {
+        const data = {
+          balance,
+          deadlineTarget,
+          deadlineSpinsLeft,
+          ownedCharms: JSON.parse(JSON.stringify(ownedCharms, (k, v) => v === Infinity ? '__INF__' : v)),
+          spinCount,
+          stonksInterest,
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      } catch(e) { console.warn('Save failed:', e); }
+    }
+
+    function loadGame() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        balance = data.balance ?? 50;
+        deadlineTarget = data.deadlineTarget ?? DEADLINE_START;
+        deadlineSpinsLeft = data.deadlineSpinsLeft ?? DEADLINE_SPINS;
+        spinCount = data.spinCount ?? 0;
+        stonksInterest = data.stonksInterest ?? 1;
+        // Restore ownedCharms, reviving Infinity
+        if (data.ownedCharms) {
+          Object.keys(ownedCharms).forEach(k => delete ownedCharms[k]);
+          for (const [id, val] of Object.entries(data.ownedCharms)) {
+            ownedCharms[id] = JSON.parse(JSON.stringify(val), (k, v) => v === '__INF__' ? Infinity : v);
+          }
+        }
+        updateMoneyDisplay();
+        updateDeadlineHud();
+        renderCharms();
+        return true;
+      } catch(e) { console.warn('Load failed:', e); return false; }
+    }
+
+    function clearSave() {
+      localStorage.removeItem(SAVE_KEY);
+    }
+
+    // Auto-save after every spin — called from finally block
+    let _saveTimer = null;
+    function scheduleSave() {
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(saveGame, 400);
+    }
+
+    // ── Menu / Pause logic ────────────────────────────────────────
+    const mainMenu        = document.getElementById('mainMenu');
+    const pauseOverlay    = document.getElementById('pauseOverlay');
+    const charmsInfoOverlay = document.getElementById('charmsInfoOverlay');
+    const gameElements    = [
+      document.getElementById('slotMachine'),
+      document.getElementById('leverHousing'),
+      document.getElementById('insertCoinBox'),
+      document.getElementById('winMsg'),
+      document.getElementById('charmsBtn'),
+      document.getElementById('deadlineHud'),
+      document.getElementById('activeCharmsHud'),
+      document.getElementById('pauseBtn'),
+    ];
+
+    function showGame() {
+      gameElements.forEach(el => { if (el) el.style.display = ''; });
+      mainMenu.classList.remove('active');
+      pauseOverlay.classList.remove('active');
+      charmsInfoOverlay.classList.remove('active');
+    }
+
+    function hideGame() {
+      // hide the in-game UI elements (overlays handle themselves)
+      document.getElementById('insertCoinBox').style.display = 'none';
+      document.getElementById('deadlineHud').style.display = 'none';
+      document.getElementById('activeCharmsHud').style.display = 'none';
+      document.getElementById('charmsBtn').style.display = 'none';
+      document.getElementById('pauseBtn').style.display = 'none';
+    }
+
+    function startGame() {
+      showGame();
+      updateMoneyDisplay();
+      updateDeadlineHud();
+      renderCharms();
+    }
+
+    function restartGame() {
+      clearSave();
+      balance = 50;
+      deadlineTarget = DEADLINE_START;
+      deadlineSpinsLeft = DEADLINE_SPINS;
+      deadlineStartBalance = balance;
+      spinCount = 0;
+      stonksInterest = 1;
+      Object.keys(ownedCharms).forEach(k => delete ownedCharms[k]);
+      boughtSlotMeta.clear();
+      coinPickedUp = false;
+      coinInserted = false;
+      freeSpin = false;
+      coinWillActivate = false;
+      spinning = false;
+      resetCoinSlot();
+      startGame();
+    }
+
+    // Build charms info list
+    function buildCharmsInfo() {
+      const list = document.getElementById('charmsInfoList');
+      list.innerHTML = '';
+      // total weight for rarity %
+      const totalWeight = CHARM_DEFS.reduce((s, d) => s + (d.stockWeight || 0), 0);
+      CHARM_DEFS.forEach(def => {
+        const pct = totalWeight > 0 ? ((def.stockWeight / totalWeight) * 100).toFixed(1) : '?';
+        const row = document.createElement('div');
+        row.className = 'charm-info-row';
+        row.innerHTML = `
+          <div class="charm-info-emoji">${def.emoji}</div>
+          <div class="charm-info-body">
+            <div class="charm-info-name">${def.name} — $${def.price}</div>
+            <div class="charm-info-meta">${pct}% shop chance &nbsp;|&nbsp; ${def.maxUses === Infinity ? '∞ uses' : def.maxUses + ' use' + (def.maxUses > 1 ? 's' : '')}</div>
+            <div class="charm-info-meta" style="color:#ffffff88;margin-top:3px">${def.desc}</div>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    // Menu buttons
+    document.getElementById('menuPlay').addEventListener('click', () => {
+      const hasSave = !!localStorage.getItem(SAVE_KEY);
+      if (hasSave) loadGame();
+      startGame();
+    });
+
+    document.getElementById('menuPayout').addEventListener('click', () => {
+      mainMenu.classList.remove('active');
+      document.getElementById('payoutModal').classList.add('active');
+      document.getElementById('payoutModal').dataset.fromMenu = '1';
+    });
+
+    // Intercept payout close — if opened from menu, return to menu
+    document.getElementById('payoutClose').addEventListener('click', () => {
+      if (document.getElementById('payoutModal').dataset.fromMenu) {
+        delete document.getElementById('payoutModal').dataset.fromMenu;
+        mainMenu.classList.add('active');
+      }
+    });
+
+    document.getElementById('menuCharmsInfo').addEventListener('click', () => {
+      buildCharmsInfo();
+      mainMenu.classList.remove('active');
+      charmsInfoOverlay.classList.add('active');
+    });
+
+    document.getElementById('charmsInfoBack').addEventListener('click', () => {
+      charmsInfoOverlay.classList.remove('active');
+      mainMenu.classList.add('active');
+    });
+
+    // Pause button
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+      pauseOverlay.classList.add('active');
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const overlays = ['jackpotOverlay','irsOverlay','taxesOverlay','ultimateOverlay','charmsModal','payoutModal','mainMenu','charmsInfoOverlay'];
+      const anyOpen = overlays.some(id => document.getElementById(id)?.classList.contains('active'));
+      if (anyOpen) return;
+      pauseOverlay.classList.toggle('active');
+    });
+
+    document.getElementById('pauseResume').addEventListener('click', () => {
+      pauseOverlay.classList.remove('active');
+    });
+
+    document.getElementById('pauseRestart').addEventListener('click', () => {
+      pauseOverlay.classList.remove('active');
+      restartGame();
+    });
+
+    document.getElementById('pauseMenu').addEventListener('click', () => {
+      pauseOverlay.classList.remove('active');
+      saveGame();
+      mainMenu.classList.add('active');
+      hideGame();
+    });
+
+    // On load: hide game, show menu (game hidden until Play is pressed)
+    hideGame();
+    // Check for existing save and show continue option
+    if (localStorage.getItem(SAVE_KEY)) {
+      const playBtn = document.getElementById('menuPlay');
+      playBtn.textContent = '▶ CONTINUE';
+      // add a new game button
+      const newBtn = document.createElement('button');
+      newBtn.className = 'menu-btn menu-btn-secondary';
+      newBtn.textContent = '✦ NEW GAME';
+      newBtn.addEventListener('click', () => {
+        restartGame();
+      });
+      document.querySelector('.menu-buttons').appendChild(newBtn);
     }
 
   </script>
