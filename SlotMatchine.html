@@ -1388,29 +1388,39 @@
       // Not met — consume a spin
       deadlineSpinsLeft--;
       if (deadlineSpinsLeft <= 0) {
-        // Failed — wipe all charms
-        const hadCharms = Object.keys(ownedCharms).length > 0;
-        Object.keys(ownedCharms).forEach(k => delete ownedCharms[k]);
-        boughtSlotMeta.clear();
-        renderCharms();
-
-        const owed = deadlineTarget;
         const wasInDebt = balance < 0;
-        balance = owed;
-        deadlineSpinsLeft = DEADLINE_SPINS;
-        deadlineTarget = balance * 2;
-        checkGoldenClover();
-        updateMoneyDisplay(true);
-        updateDeadlineHud();
 
         if (!wasInDebt) {
-          // Not in debt — taxes screen: charms taken, money given back
-          const refund = Math.floor(owed * 0.25);
-          balance += refund;
+          // Not in debt — sell all charms at their price, add to balance
+          let sellTotal = 0;
+          Object.keys(ownedCharms).forEach(k => {
+            const def = CHARM_DEFS.find(d => d.id === k);
+            if (def) sellTotal += def.price;
+          });
+          Object.keys(ownedCharms).forEach(k => delete ownedCharms[k]);
+          boughtSlotMeta.clear();
+          renderCharms();
+          balance += sellTotal;
+          deadlineSpinsLeft = DEADLINE_SPINS;
+          deadlineTarget = balance * 2;
           updateMoneyDisplay(true);
-          taxesRefund.textContent = `...but gave you $${refund} back. 💸`;
+          updateDeadlineHud();
+          taxesRefund.textContent = sellTotal > 0
+            ? `...but sold your charms for $${sellTotal}. 💸`
+            : `...you had no charms to sell. 💸`;
           taxesOverlay.classList.add('active');
         } else {
+          // In debt — wipe charms, set balance to deadline amount
+          Object.keys(ownedCharms).forEach(k => delete ownedCharms[k]);
+          boughtSlotMeta.clear();
+          renderCharms();
+          const owed = deadlineTarget;
+          balance = owed;
+          deadlineSpinsLeft = DEADLINE_SPINS;
+          deadlineTarget = balance * 2;
+          checkGoldenClover();
+          updateMoneyDisplay(true);
+          updateDeadlineHud();
           irsDebt.textContent = `You needed $${owed} but failed. Balance set to $${owed}.`;
           irsOverlay.classList.add('active');
         }
@@ -1453,9 +1463,9 @@
 
     function checkGoldenClover() {
       if (ownedCharms['goldenclover'] && balance < 0) {
-        balance = 1000;
+        balance = deadlineTarget;
         fireCharmPopup('🌟🍀');
-        addWinTag('🌟🍀 GOLDEN CLOVER — Debt blocked! +$1000');
+        addWinTag(`🌟🍀 GOLDEN CLOVER — Debt blocked! Balance set to $${deadlineTarget}`);
         if (Math.random() < 0.5) {
           deadlineSpinsLeft = DEADLINE_SPINS;
           updateDeadlineHud();
@@ -2393,7 +2403,7 @@
         uses: 100,
         maxUses: 100,
         passive: true,
-        activateChance: 0.20,
+        activateChance: 0.45,
       },
       {
         id: 'clover',
@@ -2863,9 +2873,9 @@
         activeEmojis.push('😣');
       }
 
-      // Lucky7 — 20% chance to activate and guarantee a jackpot
+      // Lucky7 — 45% chance to activate and guarantee a jackpot
       const l7 = ownedCharms['lucky7'];
-      if (l7 && l7.uses > 0 && Math.random() < 0.20) {
+      if (l7 && l7.uses > 0 && Math.random() < 0.45) {
         lucky7ActiveThisSpin = true;
         l7.uses--;
         if (l7.uses <= 0) delete ownedCharms['lucky7'];
@@ -2988,6 +2998,16 @@
         addWinTag(`📈 GOLDEN STONKS +$${payout}`);
         gs.payout = (gs.payout || 5) * 1.15;
         renderCharms();
+      }
+
+      // Last Chance — on final spin, 50% chance to set balance to deadlineTarget
+      if (ownedCharms['lastchance'] && deadlineSpinsLeft === 1) {
+        if (Math.random() < 0.5) {
+          balance = deadlineTarget;
+          updateMoneyDisplay(true);
+          updateDeadlineHud();
+          addWinTag(`% LAST CHANCE — Balance set to $${deadlineTarget}!`);
+        }
       }
     }
 
